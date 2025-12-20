@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Color Palette Extractor</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@400;500;600&display=swap");
+
+      :root {
+        --ink: #1b1b1d;
+        --muted: #5d616b;
+        --accent: #ff7a59;
+        --accent-2: #2b8cff;
+        --card: rgba(255, 255, 255, 0.86);
+        --stroke: rgba(27, 27, 29, 0.12);
+        --shadow: 0 30px 60px rgba(24, 24, 30, 0.18);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 10%, #ffe1c2 0%, transparent 45%),
+          radial-gradient(circle at 80% 20%, #c8e7ff 0%, transparent 50%),
+          linear-gradient(140deg, #fff4eb 0%, #f3f7ff 50%, #fff 100%);
+      }
+
+      .page {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 48px 20px 64px;
+      }
+
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 28px;
+        animation: rise 600ms ease-out both;
+      }
+
+      header h1 {
+        font-family: "DM Serif Display", "Times New Roman", serif;
+        font-size: clamp(2.2rem, 4vw, 3.4rem);
+        margin: 0;
+        letter-spacing: 0.5px;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 640px;
+        line-height: 1.6;
+      }
+
+      .card {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        gap: 24px;
+        padding: 26px;
+        border-radius: var(--radius);
+        background: var(--card);
+        border: 1px solid var(--stroke);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+        animation: rise 700ms ease-out both;
+      }
+
+      .dropzone {
+        border: 2px dashed rgba(43, 140, 255, 0.35);
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.6);
+        transition: border-color 150ms ease, background 150ms ease;
+        min-height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-direction: column;
+      }
+
+      .dropzone.dragover {
+        border-color: var(--accent);
+        background: rgba(255, 234, 224, 0.7);
+      }
+
+      .dropzone button {
+        border: none;
+        background: var(--accent);
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+
+      .dropzone button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(255, 122, 89, 0.25);
+      }
+
+      .hint {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 8px 14px;
+        border: 1px solid rgba(27, 27, 29, 0.08);
+      }
+
+      .control input[type="range"] {
+        accent-color: var(--accent-2);
+      }
+
+      .control label {
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .control strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .actions button {
+        border: none;
+        background: var(--accent-2);
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+
+      .actions button:disabled {
+        background: #b9c8e8;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      .actions button:not(:disabled):hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 18px rgba(43, 140, 255, 0.25);
+      }
+
+      .stats {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin-top: 10px;
+      }
+
+      .preview {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .image-wrap {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(27, 27, 29, 0.1);
+        background: #fff;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .image-wrap img {
+        max-width: 100%;
+        display: block;
+      }
+
+      .palette {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+      }
+
+      .swatch {
+        border-radius: 14px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 88px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+        animation: pop 420ms ease-out both;
+        animation-delay: var(--delay, 0ms);
+      }
+
+      .swatch button {
+        border: none;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        align-self: flex-start;
+      }
+
+      .swatch .hex {
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.6px;
+      }
+
+      .swatch .share {
+        font-size: 0.8rem;
+      }
+
+      .empty {
+        color: var(--muted);
+        padding: 10px 0;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: translateY(8px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @media (max-width: 900px) {
+        .card {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <h1>Color Palette Extractor</h1>
+        <p>
+          Drop in an image to extract its dominant colors. Everything runs
+          locally in your browser. No uploads, no dependencies.
+        </p>
+      </header>
+
+      <div class="card">
+        <section>
+          <div class="dropzone" id="dropzone" tabindex="0">
+            <input id="fileInput" type="file" accept="image/*">
+            <div>
+              <strong>Drop an image here</strong>
+              <div class="hint">or choose one from your device</div>
+            </div>
+            <button type="button" id="browseButton">Choose image</button>
+            <div class="hint">PNG, JPG, GIF, WEBP</div>
+          </div>
+
+          <div style="height: 18px;"></div>
+
+          <div class="controls">
+            <div class="control">
+              <label for="colorCount">Colors</label>
+              <input id="colorCount" type="range" min="2" max="12" value="6">
+              <strong id="colorCountLabel">6</strong>
+            </div>
+            <div class="control">
+              <label>
+                <input id="sortLightness" type="checkbox">
+                Sort by lightness
+              </label>
+            </div>
+            <div class="actions">
+              <button id="copyPalette" type="button" disabled>Copy hex list</button>
+            </div>
+          </div>
+          <div class="stats" id="stats">Load an image to see sampling details.</div>
+          <div class="stats">Palette can vary slightly each time due to randomized sampling.</div>
+        </section>
+
+        <section class="preview">
+          <div class="image-wrap">
+            <img id="previewImage" alt="" hidden>
+            <div class="empty" id="imageEmpty">Image preview will appear here.</div>
+          </div>
+          <div class="palette" id="palette">
+            <div class="empty">Your palette will show up after extraction.</div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <canvas id="canvas" hidden></canvas>
+
+    <script>
+      const dropzone = document.getElementById("dropzone");
+      const fileInput = document.getElementById("fileInput");
+      const browseButton = document.getElementById("browseButton");
+      const previewImage = document.getElementById("previewImage");
+      const imageEmpty = document.getElementById("imageEmpty");
+      const paletteEl = document.getElementById("palette");
+      const colorCount = document.getElementById("colorCount");
+      const colorCountLabel = document.getElementById("colorCountLabel");
+      const sortLightness = document.getElementById("sortLightness");
+      const copyPalette = document.getElementById("copyPalette");
+      const stats = document.getElementById("stats");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+      const sampleCap = 20000;
+      const maxDimension = 900;
+      let currentPixels = [];
+      let currentPalette = [];
+      let extractTimer = null;
+
+      function setPaletteMessage(message) {
+        paletteEl.innerHTML = "<div class=\"empty\">" + message + "</div>";
+      }
+
+      function rgbToHex(r, g, b) {
+        return (
+          "#" +
+          [r, g, b]
+            .map((value) => value.toString(16).padStart(2, "0"))
+            .join("")
+            .toUpperCase()
+        );
+      }
+
+      function luminance([r, g, b]) {
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      }
+
+      function copyText(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          return navigator.clipboard.writeText(text);
+        }
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+        return Promise.resolve();
+      }
+
+      function kmeans(pixels, k, maxIterations) {
+        if (pixels.length === 0) {
+          return { centers: [], counts: [] };
+        }
+
+        const centers = [];
+        for (let i = 0; i < k; i += 1) {
+          const sample = pixels[Math.floor(Math.random() * pixels.length)];
+          centers.push([sample[0], sample[1], sample[2]]);
+        }
+
+        const counts = new Array(k).fill(0);
+        for (let iteration = 0; iteration < maxIterations; iteration += 1) {
+          const sums = Array.from({ length: k }, () => [0, 0, 0, 0]);
+
+          for (let p = 0; p < pixels.length; p += 1) {
+            const [r, g, b] = pixels[p];
+            let bestIndex = 0;
+            let bestDistance = Infinity;
+
+            for (let c = 0; c < k; c += 1) {
+              const dr = r - centers[c][0];
+              const dg = g - centers[c][1];
+              const db = b - centers[c][2];
+              const distance = dr * dr + dg * dg + db * db;
+              if (distance < bestDistance) {
+                bestDistance = distance;
+                bestIndex = c;
+              }
+            }
+
+            sums[bestIndex][0] += r;
+            sums[bestIndex][1] += g;
+            sums[bestIndex][2] += b;
+            sums[bestIndex][3] += 1;
+          }
+
+          for (let c = 0; c < k; c += 1) {
+            const count = sums[c][3];
+            if (count > 0) {
+              centers[c][0] = Math.round(sums[c][0] / count);
+              centers[c][1] = Math.round(sums[c][1] / count);
+              centers[c][2] = Math.round(sums[c][2] / count);
+              counts[c] = count;
+            } else {
+              const sample = pixels[Math.floor(Math.random() * pixels.length)];
+              centers[c] = [sample[0], sample[1], sample[2]];
+              counts[c] = 0;
+            }
+          }
+        }
+
+        return { centers, counts };
+      }
+
+      function renderPalette(palette) {
+        paletteEl.innerHTML = "";
+        if (!palette.length) {
+          setPaletteMessage("No colors extracted yet.");
+          copyPalette.disabled = true;
+          return;
+        }
+
+        palette.forEach((color, index) => {
+          const swatch = document.createElement("div");
+          const textColor = luminance(color.rgb) > 140 ? "#1b1b1d" : "#ffffff";
+          swatch.className = "swatch";
+          swatch.style.background = color.hex;
+          swatch.style.color = textColor;
+          swatch.style.setProperty("--delay", index * 40 + "ms");
+
+          const hex = document.createElement("div");
+          hex.className = "hex";
+          hex.textContent = color.hex;
+
+          const share = document.createElement("div");
+          share.className = "share";
+          share.textContent = color.share + "%";
+
+          const copyButton = document.createElement("button");
+          copyButton.type = "button";
+          copyButton.textContent = "Copy";
+          copyButton.addEventListener("click", () => {
+            copyText(color.hex);
+          });
+
+          swatch.appendChild(hex);
+          swatch.appendChild(share);
+          swatch.appendChild(copyButton);
+          paletteEl.appendChild(swatch);
+        });
+
+        copyPalette.disabled = false;
+      }
+
+      function extractPalette() {
+        if (!currentPixels.length) {
+          setPaletteMessage("No pixels available. Try a different image.");
+          copyPalette.disabled = true;
+          return;
+        }
+
+        const k = Math.min(Number(colorCount.value), currentPixels.length);
+        colorCountLabel.textContent = k.toString();
+
+        const { centers, counts } = kmeans(currentPixels, k, 10);
+        const total = counts.reduce((sum, value) => sum + value, 0) || 1;
+
+        const palette = centers.map((center, index) => {
+          const share = Math.round((counts[index] / total) * 100);
+          return {
+            rgb: center,
+            hex: rgbToHex(center[0], center[1], center[2]),
+            count: counts[index],
+            share,
+          };
+        });
+
+        if (sortLightness.checked) {
+          palette.sort((a, b) => luminance(a.rgb) - luminance(b.rgb));
+        } else {
+          palette.sort((a, b) => b.count - a.count);
+        }
+
+        currentPalette = palette;
+        renderPalette(palette);
+      }
+
+      function scheduleExtract() {
+        if (extractTimer) {
+          clearTimeout(extractTimer);
+        }
+        extractTimer = setTimeout(extractPalette, 120);
+      }
+
+      function handleImage(file) {
+        if (!file || !file.type.startsWith("image/")) {
+          setPaletteMessage("Please choose a valid image file.");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          previewImage.onload = () => {
+            const scale = Math.min(
+              1,
+              maxDimension / Math.max(previewImage.naturalWidth, previewImage.naturalHeight)
+            );
+            const width = Math.max(1, Math.round(previewImage.naturalWidth * scale));
+            const height = Math.max(1, Math.round(previewImage.naturalHeight * scale));
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.clearRect(0, 0, width, height);
+            ctx.drawImage(previewImage, 0, 0, width, height);
+
+            const imageData = ctx.getImageData(0, 0, width, height).data;
+            const totalPixels = width * height;
+            const step = Math.max(1, Math.ceil(totalPixels / sampleCap));
+            const pixels = [];
+
+            for (let i = 0; i < imageData.length; i += 4 * step) {
+              const alpha = imageData[i + 3];
+              if (alpha < 32) {
+                continue;
+              }
+              pixels.push([imageData[i], imageData[i + 1], imageData[i + 2]]);
+            }
+
+            currentPixels = pixels;
+            stats.textContent =
+              "Scaled to " +
+              width +
+              "x" +
+              height +
+              ", sampled " +
+              pixels.length +
+              " pixels.";
+            extractPalette();
+          };
+
+          previewImage.src = reader.result;
+          previewImage.hidden = false;
+          imageEmpty.hidden = true;
+        };
+
+        reader.readAsDataURL(file);
+      }
+
+      function openFilePicker() {
+        fileInput.click();
+      }
+
+      browseButton.addEventListener("click", openFilePicker);
+
+      fileInput.addEventListener("change", (event) => {
+        handleImage(event.target.files[0]);
+        fileInput.value = "";
+      });
+
+      dropzone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+
+      dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("dragover");
+      });
+
+      dropzone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        dropzone.classList.remove("dragover");
+        handleImage(event.dataTransfer.files[0]);
+      });
+
+      dropzone.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openFilePicker();
+        }
+      });
+
+      colorCount.addEventListener("input", scheduleExtract);
+      sortLightness.addEventListener("change", extractPalette);
+
+      copyPalette.addEventListener("click", () => {
+        const list = currentPalette.map((color) => color.hex).join("\n");
+        copyText(list);
+      });
+    </script>
+  </body>
+</html>
