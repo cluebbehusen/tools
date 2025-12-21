@@ -12,5 +12,12 @@
     "description": "Convert SVG markup or files into PNG or JPG exports with preview controls.",
     "createdAt": "2025-12-21",
     "updatedAt": "2025-12-21"
+  },
+  {
+    "slug": "gif-downscale",
+    "title": "GIF Downscale Tool",
+    "description": "Reduce GIF file sizes by downscaling, skipping frames, and optimizing colors.",
+    "createdAt": "2025-12-21",
+    "updatedAt": "2025-12-21"
   }
 ]

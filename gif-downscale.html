@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GIF Downscale Tool</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap");
+
+      :root {
+        --ink: #1f2733;
+        --muted: #5c6876;
+        --accent: #4b6f88;
+        --accent-2: #6f879c;
+        --accent-3: #aab4bf;
+        --card: rgba(255, 255, 255, 0.92);
+        --stroke: rgba(31, 39, 51, 0.1);
+        --shadow: 0 26px 56px rgba(31, 39, 51, 0.14);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 14%, rgba(242, 232, 217, 0.9), transparent 48%),
+          radial-gradient(circle at 86% 18%, rgba(219, 229, 238, 0.9), transparent 46%),
+          linear-gradient(140deg, #d6dee6 0%, #eef2f6 52%, #f3ede2 100%);
+      }
+
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 44px 20px 72px;
+      }
+
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 26px;
+        animation: rise 700ms ease-out both;
+      }
+
+      header h1 {
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        font-size: clamp(2.2rem, 4vw, 3.4rem);
+        font-weight: 600;
+        margin: 0;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 680px;
+        line-height: 1.6;
+      }
+
+      .panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 24px;
+      }
+
+      @media (max-width: 800px) {
+        .panel {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--stroke);
+        border-radius: var(--radius);
+        padding: 22px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+        animation: rise 800ms ease-out both;
+      }
+
+      .section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+
+      .section:last-child {
+        margin-bottom: 0;
+      }
+
+      .section h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      label {
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: var(--ink);
+      }
+
+      input[type="file"] {
+        padding: 12px;
+        border-radius: 14px;
+        border: 2px dashed var(--accent-3);
+        background: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        font-size: 0.95rem;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        height: 6px;
+        border-radius: 5px;
+        background: var(--accent-3);
+        outline: none;
+        -webkit-appearance: none;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--accent);
+        cursor: pointer;
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--accent);
+        cursor: pointer;
+        border: none;
+      }
+
+      select {
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(26, 31, 38, 0.15);
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        font-size: 0.95rem;
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      .value-display {
+        font-size: 0.9rem;
+        color: var(--accent);
+        font-weight: 500;
+      }
+
+      button {
+        padding: 14px 28px;
+        border-radius: 14px;
+        border: none;
+        background: var(--accent);
+        color: white;
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 200ms ease;
+        width: 100%;
+      }
+
+      button:hover:not(:disabled) {
+        background: var(--accent-2);
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        background: var(--accent-3);
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      .preview-area {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+        min-height: 200px;
+        padding: 20px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid var(--stroke);
+      }
+
+      .preview-area img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .preview-label {
+        font-weight: 600;
+        color: var(--ink);
+        font-size: 0.95rem;
+      }
+
+      .file-info {
+        padding: 12px;
+        background: rgba(75, 111, 136, 0.1);
+        border-radius: 10px;
+        font-size: 0.9rem;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .status {
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(75, 111, 136, 0.1);
+        color: var(--ink);
+        font-size: 0.9rem;
+        text-align: center;
+        margin-top: 12px;
+      }
+
+      .status.processing {
+        background: rgba(255, 193, 7, 0.2);
+      }
+
+      .status.success {
+        background: rgba(76, 175, 80, 0.2);
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .comparison {
+        display: flex;
+        justify-content: space-around;
+        gap: 16px;
+        padding: 16px;
+        background: rgba(75, 111, 136, 0.08);
+        border-radius: 10px;
+        margin-top: 12px;
+      }
+
+      .comparison-item {
+        text-align: center;
+      }
+
+      .comparison-label {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+
+      .comparison-value {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      .savings {
+        color: #4caf50;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <h1>GIF Downscale Tool</h1>
+        <p>Reduce GIF file sizes by downscaling, skipping frames, and optimizing colors.</p>
+      </header>
+
+      <div class="panel">
+        <div class="card">
+          <div class="section">
+            <h2>Upload GIF</h2>
+            <input type="file" id="fileInput" accept=".gif,image/gif">
+          </div>
+
+          <div class="section">
+            <div class="control-group">
+              <label>Scale: <span class="value-display" id="scaleValue">100%</span></label>
+              <input type="range" id="scaleSlider" min="10" max="100" value="100">
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="control-group">
+              <label>Frame Skip</label>
+              <select id="frameSkip">
+                <option value="1">Keep all frames</option>
+                <option value="2">Keep every 2nd frame</option>
+                <option value="3">Keep every 3rd frame</option>
+                <option value="4">Keep every 4th frame</option>
+                <option value="5">Keep every 5th frame</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="control-group">
+              <label>Color Quality: <span class="value-display" id="qualityValue">10 (best)</span></label>
+              <input type="range" id="qualitySlider" min="1" max="30" value="10">
+            </div>
+          </div>
+
+          <button id="processBtn" disabled>Process GIF</button>
+          <button id="downloadBtn" disabled>Download Optimized GIF</button>
+
+          <div id="statusArea"></div>
+        </div>
+
+        <div class="card">
+          <div class="section">
+            <h2>Original</h2>
+            <div class="preview-area" id="originalPreview">
+              <span class="preview-label">No file selected</span>
+            </div>
+            <div id="originalInfo"></div>
+          </div>
+
+          <div class="section">
+            <h2>Optimized</h2>
+            <div class="preview-area" id="optimizedPreview">
+              <span class="preview-label">Not processed yet</span>
+            </div>
+            <div id="optimizedInfo"></div>
+          </div>
+
+          <div id="comparisonArea"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/dist/gifuct-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+    <script>
+      let originalFile = null;
+      let originalGif = null;
+      let processedBlob = null;
+
+      const fileInput = document.getElementById('fileInput');
+      const scaleSlider = document.getElementById('scaleSlider');
+      const scaleValue = document.getElementById('scaleValue');
+      const frameSkip = document.getElementById('frameSkip');
+      const qualitySlider = document.getElementById('qualitySlider');
+      const qualityValue = document.getElementById('qualityValue');
+      const processBtn = document.getElementById('processBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const originalPreview = document.getElementById('originalPreview');
+      const optimizedPreview = document.getElementById('optimizedPreview');
+      const originalInfo = document.getElementById('originalInfo');
+      const optimizedInfo = document.getElementById('optimizedInfo');
+      const statusArea = document.getElementById('statusArea');
+      const comparisonArea = document.getElementById('comparisonArea');
+
+      scaleSlider.addEventListener('input', () => {
+        scaleValue.textContent = scaleSlider.value + '%';
+      });
+
+      qualitySlider.addEventListener('input', () => {
+        const val = qualitySlider.value;
+        const label = val <= 10 ? 'best' : val <= 20 ? 'good' : 'fast';
+        qualityValue.textContent = `${val} (${label})`;
+      });
+
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        originalFile = file;
+        processedBlob = null;
+        downloadBtn.disabled = true;
+        optimizedPreview.innerHTML = '<span class="preview-label">Not processed yet</span>';
+        optimizedInfo.innerHTML = '';
+        comparisonArea.innerHTML = '';
+        statusArea.innerHTML = '';
+
+        const url = URL.createObjectURL(file);
+        originalPreview.innerHTML = `<img src="${url}" alt="Original GIF">`;
+        originalInfo.innerHTML = `<div class="file-info">Size: ${formatBytes(file.size)}</div>`;
+
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          originalGif = gifuct.parseGIF(arrayBuffer);
+          const frames = gifuct.decompressFrames(originalGif, true);
+
+          originalInfo.innerHTML += `<div class="file-info">Frames: ${frames.length}</div>`;
+          processBtn.disabled = false;
+        } catch (err) {
+          showStatus('Error loading GIF: ' + err.message, 'error');
+          processBtn.disabled = true;
+        }
+      });
+
+      processBtn.addEventListener('click', async () => {
+        if (!originalGif) return;
+
+        processBtn.disabled = true;
+        downloadBtn.disabled = true;
+        showStatus('Processing...', 'processing');
+
+        try {
+          const scale = scaleSlider.value / 100;
+          const skip = parseInt(frameSkip.value);
+          const quality = parseInt(qualitySlider.value);
+
+          const frames = gifuct.decompressFrames(originalGif, true);
+
+          const filteredFrames = frames.filter((_, i) => i % skip === 0);
+
+          const firstFrame = filteredFrames[0];
+          const newWidth = Math.round(firstFrame.dims.width * scale);
+          const newHeight = Math.round(firstFrame.dims.height * scale);
+
+          const gif = new GIF({
+            workers: 2,
+            quality: quality,
+            width: newWidth,
+            height: newHeight,
+            workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+          });
+
+          const tempCanvas = document.createElement('canvas');
+          const tempCtx = tempCanvas.getContext('2d');
+
+          for (let i = 0; i < filteredFrames.length; i++) {
+            const frame = filteredFrames[i];
+
+            tempCanvas.width = frame.dims.width;
+            tempCanvas.height = frame.dims.height;
+
+            const imageData = tempCtx.createImageData(frame.dims.width, frame.dims.height);
+            imageData.data.set(frame.patch);
+            tempCtx.putImageData(imageData, 0, 0);
+
+            const scaledCanvas = document.createElement('canvas');
+            scaledCanvas.width = newWidth;
+            scaledCanvas.height = newHeight;
+            const scaledCtx = scaledCanvas.getContext('2d');
+            scaledCtx.drawImage(tempCanvas, 0, 0, newWidth, newHeight);
+
+            gif.addFrame(scaledCanvas, { delay: frame.delay });
+          }
+
+          gif.on('finished', (blob) => {
+            processedBlob = blob;
+            const url = URL.createObjectURL(blob);
+            optimizedPreview.innerHTML = `<img src="${url}" alt="Optimized GIF">`;
+            optimizedInfo.innerHTML = `<div class="file-info">Size: ${formatBytes(blob.size)}</div>`;
+            optimizedInfo.innerHTML += `<div class="file-info">Frames: ${filteredFrames.length}</div>`;
+
+            const savings = ((1 - blob.size / originalFile.size) * 100).toFixed(1);
+            comparisonArea.innerHTML = `
+              <div class="comparison">
+                <div class="comparison-item">
+                  <div class="comparison-label">Original</div>
+                  <div class="comparison-value">${formatBytes(originalFile.size)}</div>
+                </div>
+                <div class="comparison-item">
+                  <div class="comparison-label">Optimized</div>
+                  <div class="comparison-value">${formatBytes(blob.size)}</div>
+                </div>
+                <div class="comparison-item">
+                  <div class="comparison-label">Savings</div>
+                  <div class="comparison-value savings">${savings > 0 ? savings : '0'}%</div>
+                </div>
+              </div>
+            `;
+
+            downloadBtn.disabled = false;
+            processBtn.disabled = false;
+            showStatus('Processing complete!', 'success');
+          });
+
+          gif.render();
+        } catch (err) {
+          showStatus('Error processing GIF: ' + err.message, 'error');
+          processBtn.disabled = false;
+        }
+      });
+
+      downloadBtn.addEventListener('click', () => {
+        if (!processedBlob) return;
+
+        const url = URL.createObjectURL(processedBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'optimized.gif';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+      }
+
+      function showStatus(message, type = '') {
+        statusArea.innerHTML = `<div class="status ${type}">${message}</div>`;
+      }
+    </script>
+  </body>
+</html>
