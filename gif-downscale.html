@@ -364,6 +364,8 @@
       let originalFile = null;
       let originalFrames = null;
       let processedBlob = null;
+      const workerScriptSource = 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js';
+      let workerScriptBlobUrl = null;
 
       const fileInput = document.getElementById('fileInput');
       const scaleSlider = document.getElementById('scaleSlider');
@@ -446,11 +448,13 @@
           const newWidth = Math.round(originalFrames.width * scale);
           const newHeight = Math.round(originalFrames.height * scale);
 
+          const workerScript = await resolveWorkerScriptUrl();
           const gif = new GIF({
-            workers: 0,
+            workers: 2,
             quality: quality,
             width: newWidth,
-            height: newHeight
+            height: newHeight,
+            workerScript: workerScript
           });
 
           const tempCanvas = document.createElement('canvas');
@@ -552,6 +556,23 @@
 
       function showStatus(message, type = '') {
         statusArea.innerHTML = `<div class="status ${type}">${message}</div>`;
+      }
+
+      async function resolveWorkerScriptUrl() {
+        if (workerScriptBlobUrl) return workerScriptBlobUrl;
+
+        try {
+          const response = await fetch(workerScriptSource, { cache: 'force-cache' });
+          if (!response.ok) {
+            throw new Error(`Worker fetch failed: ${response.status}`);
+          }
+          const scriptText = await response.text();
+          const blob = new Blob([scriptText], { type: 'text/javascript' });
+          workerScriptBlobUrl = URL.createObjectURL(blob);
+          return workerScriptBlobUrl;
+        } catch (err) {
+          return workerScriptSource;
+        }
       }
     </script>
   </body>
