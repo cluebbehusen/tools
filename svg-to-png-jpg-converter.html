@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SVG to PNG/JPG Converter</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap");
+
+      :root {
+        --ink: #1f2733;
+        --muted: #5c6876;
+        --accent: #4b6f88;
+        --accent-2: #6f879c;
+        --accent-3: #aab4bf;
+        --card: rgba(255, 255, 255, 0.92);
+        --stroke: rgba(31, 39, 51, 0.1);
+        --shadow: 0 26px 56px rgba(31, 39, 51, 0.14);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 14%, rgba(242, 232, 217, 0.9), transparent 48%),
+          radial-gradient(circle at 86% 18%, rgba(219, 229, 238, 0.9), transparent 46%),
+          linear-gradient(140deg, #d6dee6 0%, #eef2f6 52%, #f3ede2 100%);
+      }
+
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 44px 20px 72px;
+      }
+
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 26px;
+        animation: rise 700ms ease-out both;
+      }
+
+      header h1 {
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        font-size: clamp(2.2rem, 4vw, 3.4rem);
+        font-weight: 600;
+        margin: 0;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 680px;
+        line-height: 1.6;
+      }
+
+      .panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 24px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--stroke);
+        border-radius: var(--radius);
+        padding: 22px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+        animation: rise 800ms ease-out both;
+      }
+
+      .section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+
+      .section h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 14px 14px 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(26, 31, 38, 0.15);
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        font-size: 0.95rem;
+        background: rgba(255, 255, 255, 0.9);
+        resize: vertical;
+      }
+
+      textarea:focus,
+      input:focus,
+      select:focus,
+      button:focus {
+        outline: 2px solid rgba(75, 111, 136, 0.4);
+        outline-offset: 2px;
+      }
+
+      .input-row {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .file-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(26, 31, 38, 0.14);
+        background: #fff;
+        cursor: pointer;
+        font-weight: 600;
+        width: fit-content;
+      }
+
+      .file-button input {
+        display: none;
+      }
+
+      .url-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+      }
+
+      input[type="url"],
+      input[type="number"],
+      input[type="text"],
+      select {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(26, 31, 38, 0.15);
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        background: #fff;
+        font-size: 0.95rem;
+      }
+
+      input[type="color"] {
+        width: 100%;
+        height: 44px;
+        border-radius: 12px;
+        border: 1px solid rgba(26, 31, 38, 0.15);
+        background: #fff;
+        padding: 4px;
+      }
+
+      .hint {
+        font-size: 0.9rem;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .field label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        border: 1px solid rgba(26, 31, 38, 0.12);
+      }
+
+      .toggle input {
+        accent-color: var(--accent-2);
+      }
+
+      .meta {
+        display: grid;
+        gap: 6px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .btn-secondary {
+        background: #fff;
+        border: 1px solid rgba(26, 31, 38, 0.14);
+        color: var(--ink);
+      }
+
+      .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+        box-shadow: none;
+        transform: none;
+      }
+
+      .btn:not(:disabled):hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(26, 31, 38, 0.15);
+      }
+
+      .error {
+        background: rgba(238, 220, 200, 0.8);
+        border: 1px solid rgba(196, 148, 110, 0.5);
+        padding: 12px 14px;
+        border-radius: 12px;
+        color: #7b3f1c;
+        font-size: 0.95rem;
+      }
+
+      .error[hidden] {
+        display: none;
+      }
+
+      .preview-card {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(26, 31, 38, 0.12);
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .preview-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .preview-header h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+
+      .preview-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .preview-controls label {
+        font-size: 0.85rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .preview-controls input[type="range"] {
+        accent-color: var(--accent-2);
+      }
+
+      .preview-viewport {
+        position: relative;
+        min-height: 260px;
+        border-radius: 14px;
+        overflow: hidden;
+        background-color: #f4f6f8;
+        background-image:
+          linear-gradient(45deg, rgba(0, 0, 0, 0.08) 25%, transparent 25%),
+          linear-gradient(-45deg, rgba(0, 0, 0, 0.08) 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.08) 75%),
+          linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.08) 75%);
+        background-size: 22px 22px;
+        background-position: 0 0, 0 11px, 11px -11px, -11px 0px;
+        cursor: grab;
+        touch-action: none;
+      }
+
+      .output-viewport {
+        cursor: default;
+        touch-action: auto;
+      }
+
+      .preview-viewport img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        transform-origin: center;
+      }
+
+      .preview-empty {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.6);
+        text-align: center;
+        padding: 16px;
+      }
+
+      .preview-empty[hidden] {
+        display: none;
+      }
+
+      .output-meta {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      #outputPreview {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 980px) {
+        .panel {
+          grid-template-columns: 1fr;
+        }
+
+        .preview-viewport {
+          min-height: 220px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <h1>SVG to PNG/JPG Converter</h1>
+        <p>
+          Paste SVG markup, upload a file, or load from a URL to render crisp PNG or JPG exports. Adjust
+          size, scale, and quality while keeping viewBox proportions intact.
+        </p>
+      </header>
+
+      <section class="panel">
+        <div class="card">
+          <div class="section">
+            <h2>SVG input</h2>
+            <textarea id="svgInput" placeholder="Paste SVG markup here..."></textarea>
+            <div class="input-row">
+              <label class="file-button" for="fileInput">
+                Upload SVG
+                <input id="fileInput" type="file" accept="image/svg+xml,.svg">
+              </label>
+              <div class="url-row">
+                <input id="urlInput" type="url" placeholder="https://example.com/graphic.svg">
+                <button class="btn btn-secondary" id="loadUrl" type="button">Load URL</button>
+              </div>
+              <div class="hint">Loading a URL requires CORS access from the source.</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Output settings</h2>
+            <div class="settings-grid">
+              <div class="field">
+                <label for="formatSelect">Format</label>
+                <select id="formatSelect">
+                  <option value="png">PNG</option>
+                  <option value="jpg">JPG</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="widthInput">Width (px)</label>
+                <input id="widthInput" type="number" min="1" step="1" placeholder="Auto">
+              </div>
+              <div class="field">
+                <label for="heightInput">Height (px)</label>
+                <input id="heightInput" type="number" min="1" step="1" placeholder="Auto">
+              </div>
+              <div class="field">
+                <label for="scaleInput">Scale</label>
+                <input id="scaleInput" type="number" min="0.1" step="0.1" value="1">
+              </div>
+              <div class="field">
+                <label for="qualityInput">JPG quality</label>
+                <input id="qualityInput" type="number" min="0.1" max="1" step="0.01" value="0.92">
+              </div>
+              <div class="field">
+                <label for="bgInput">JPG background</label>
+                <input id="bgInput" type="color" value="#ffffff">
+              </div>
+            </div>
+            <div class="toggle">
+              <input id="preserveViewBox" type="checkbox" checked>
+              <label for="preserveViewBox">Preserve viewBox sizing when width and height are missing</label>
+            </div>
+            <div class="meta" id="sizeMeta"></div>
+            <div class="hint">JPG exports use the background color to replace transparency.</div>
+          </div>
+
+          <div class="section actions">
+            <button class="btn btn-primary" id="downloadBtn" type="button" disabled>Download output</button>
+            <button class="btn btn-secondary" id="openBtn" type="button" disabled>Open output in new tab</button>
+          </div>
+
+          <div class="error" id="errorBox" hidden></div>
+        </div>
+
+        <div class="card">
+          <div class="section preview-card">
+            <div class="preview-header">
+              <h2>SVG preview</h2>
+              <div class="preview-controls">
+                <label for="zoomRange">Zoom</label>
+                <input id="zoomRange" type="range" min="0.2" max="4" step="0.05" value="1">
+                <button class="btn btn-secondary" id="fitBtn" type="button">Fit</button>
+                <button class="btn btn-secondary" id="centerBtn" type="button">Center</button>
+              </div>
+            </div>
+            <div class="preview-viewport" id="svgViewport">
+              <div class="preview-empty" id="svgEmpty">Paste or load an SVG to preview it here.</div>
+              <img id="svgPreview" alt="SVG preview" hidden>
+            </div>
+            <div class="meta" id="previewMeta"></div>
+          </div>
+
+          <div class="section preview-card">
+            <div class="preview-header">
+              <h2>Output preview</h2>
+              <div class="output-meta" id="outputMeta">No output yet.</div>
+            </div>
+            <div class="preview-viewport output-viewport" id="outputViewport">
+              <div class="preview-empty" id="outputEmpty">Rendered output will appear here.</div>
+              <img id="outputPreview" alt="Output preview" hidden>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const svgInput = document.getElementById("svgInput");
+      const fileInput = document.getElementById("fileInput");
+      const urlInput = document.getElementById("urlInput");
+      const loadUrl = document.getElementById("loadUrl");
+      const formatSelect = document.getElementById("formatSelect");
+      const widthInput = document.getElementById("widthInput");
+      const heightInput = document.getElementById("heightInput");
+      const scaleInput = document.getElementById("scaleInput");
+      const qualityInput = document.getElementById("qualityInput");
+      const bgInput = document.getElementById("bgInput");
+      const preserveViewBox = document.getElementById("preserveViewBox");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const openBtn = document.getElementById("openBtn");
+      const errorBox = document.getElementById("errorBox");
+      const sizeMeta = document.getElementById("sizeMeta");
+      const previewMeta = document.getElementById("previewMeta");
+      const outputMeta = document.getElementById("outputMeta");
+      const svgPreview = document.getElementById("svgPreview");
+      const svgEmpty = document.getElementById("svgEmpty");
+      const outputPreview = document.getElementById("outputPreview");
+      const outputEmpty = document.getElementById("outputEmpty");
+      const svgViewport = document.getElementById("svgViewport");
+      const outputViewport = document.getElementById("outputViewport");
+      const zoomRange = document.getElementById("zoomRange");
+      const fitBtn = document.getElementById("fitBtn");
+      const centerBtn = document.getElementById("centerBtn");
+
+      const state = {
+        svgText: "",
+        baseWidth: 0,
+        baseHeight: 0,
+        viewBox: null,
+        normalizedSvg: "",
+        previewUrl: "",
+        outputUrl: "",
+        outputBlob: null,
+        renderTimer: null,
+        renderId: 0,
+        previewTransform: {
+          scale: 1,
+          x: 0,
+          y: 0,
+          dragging: false,
+          startX: 0,
+          startY: 0,
+        },
+      };
+
+      function setError(message) {
+        if (!message) {
+          errorBox.hidden = true;
+          errorBox.textContent = "";
+          return;
+        }
+        errorBox.hidden = false;
+        errorBox.textContent = message;
+      }
+
+      function updateButtonState() {
+        const hasOutput = Boolean(state.outputBlob);
+        downloadBtn.disabled = !hasOutput;
+        openBtn.disabled = !hasOutput;
+      }
+
+      function parseLength(value) {
+        if (!value) return null;
+        const match = String(value).trim().match(/^([+-]?\d*\.?\d+)([a-z%]*)$/i);
+        if (!match) return null;
+        const amount = parseFloat(match[1]);
+        const unit = match[2].toLowerCase();
+        const unitMap = {
+          "": 1,
+          px: 1,
+          in: 96,
+          cm: 96 / 2.54,
+          mm: 96 / 25.4,
+          pt: 96 / 72,
+          pc: 16,
+        };
+        if (!(unit in unitMap)) return null;
+        return amount * unitMap[unit];
+      }
+
+      function parseViewBox(value) {
+        if (!value) return null;
+        const parts = value.trim().split(/[ ,]+/).map(Number).filter((part) => !Number.isNaN(part));
+        if (parts.length !== 4) return null;
+        return { minX: parts[0], minY: parts[1], width: parts[2], height: parts[3] };
+      }
+
+      function parseSvg(svgText) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, "image/svg+xml");
+        if (doc.querySelector("parsererror")) {
+          throw new Error("Invalid SVG markup. Check for unclosed tags or invalid attributes.");
+        }
+        const svg = doc.documentElement;
+        if (!svg || svg.nodeName.toLowerCase() !== "svg") {
+          throw new Error("No <svg> root element found.");
+        }
+        return { doc, svg };
+      }
+
+      function computeBaseSize(svg) {
+        const widthAttr = parseLength(svg.getAttribute("width"));
+        const heightAttr = parseLength(svg.getAttribute("height"));
+        const viewBox = parseViewBox(svg.getAttribute("viewBox"));
+        let baseWidth = widthAttr;
+        let baseHeight = heightAttr;
+        let ratio = null;
+
+        if (viewBox && viewBox.width && viewBox.height) {
+          ratio = viewBox.width / viewBox.height;
+        } else if (widthAttr && heightAttr) {
+          ratio = widthAttr / heightAttr;
+        }
+
+        if (baseWidth != null && baseHeight == null && ratio) {
+          baseHeight = baseWidth / ratio;
+        }
+
+        if (baseHeight != null && baseWidth == null && ratio) {
+          baseWidth = baseHeight * ratio;
+        }
+
+        if ((baseWidth == null || baseHeight == null) && preserveViewBox.checked && viewBox) {
+          baseWidth = viewBox.width;
+          baseHeight = viewBox.height;
+        }
+
+        if (baseWidth == null || baseHeight == null) {
+          if (viewBox && viewBox.width && viewBox.height) {
+            baseWidth = baseWidth ?? viewBox.width;
+            baseHeight = baseHeight ?? viewBox.height;
+          }
+        }
+
+        if (baseWidth == null) baseWidth = 300;
+        if (baseHeight == null) baseHeight = 150;
+
+        if (baseWidth <= 0 || baseHeight <= 0) {
+          throw new Error("SVG dimensions must be greater than zero.");
+        }
+
+        return { baseWidth, baseHeight, viewBox };
+      }
+
+      function buildNormalizedSvg(svg, baseWidth, baseHeight) {
+        const clone = svg.cloneNode(true);
+        clone.setAttribute("width", String(baseWidth));
+        clone.setAttribute("height", String(baseHeight));
+        const serializer = new XMLSerializer();
+        return serializer.serializeToString(clone);
+      }
+
+      function readNumber(value) {
+        if (value === "" || value == null) return null;
+        const parsed = Number(value);
+        if (Number.isNaN(parsed)) return null;
+        return parsed;
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function computeOutputSize(baseWidth, baseHeight) {
+        const widthValue = readNumber(widthInput.value);
+        const heightValue = readNumber(heightInput.value);
+        const scaleValue = clamp(readNumber(scaleInput.value) || 1, 0.1, 10);
+
+        let outWidth = baseWidth;
+        let outHeight = baseHeight;
+
+        if (widthValue && heightValue) {
+          outWidth = widthValue;
+          outHeight = heightValue;
+        } else if (widthValue) {
+          outWidth = widthValue;
+          outHeight = Math.round((widthValue * baseHeight) / baseWidth);
+        } else if (heightValue) {
+          outHeight = heightValue;
+          outWidth = Math.round((heightValue * baseWidth) / baseHeight);
+        }
+
+        outWidth = Math.max(1, Math.round(outWidth * scaleValue));
+        outHeight = Math.max(1, Math.round(outHeight * scaleValue));
+
+        return { outWidth, outHeight, scaleValue };
+      }
+
+      function updateMeta() {
+        if (!state.baseWidth || !state.baseHeight) {
+          sizeMeta.textContent = "";
+          previewMeta.textContent = "";
+          return;
+        }
+
+        const viewBoxText = state.viewBox
+          ? `viewBox ${state.viewBox.minX} ${state.viewBox.minY} ${state.viewBox.width} ${state.viewBox.height}`
+          : "viewBox not set";
+        const sizeText = `Base size ${Math.round(state.baseWidth)} x ${Math.round(state.baseHeight)} px`;
+        sizeMeta.textContent = `${sizeText}. ${viewBoxText}.`;
+        previewMeta.textContent = `${sizeText}. Drag to pan, adjust zoom for detail.`;
+      }
+
+      function updatePreviewTransform() {
+        const { scale, x, y } = state.previewTransform;
+        svgPreview.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
+      }
+
+      function fitPreview() {
+        if (!state.baseWidth || !state.baseHeight) return;
+        const bounds = svgViewport.getBoundingClientRect();
+        const scale = Math.min(bounds.width / state.baseWidth, bounds.height / state.baseHeight);
+        const clamped = clamp(scale, 0.2, 4);
+        state.previewTransform.scale = clamped;
+        state.previewTransform.x = 0;
+        state.previewTransform.y = 0;
+        zoomRange.value = clamped.toFixed(2);
+        updatePreviewTransform();
+      }
+
+      function centerPreview() {
+        state.previewTransform.x = 0;
+        state.previewTransform.y = 0;
+        updatePreviewTransform();
+      }
+
+      function setPreviewUrl(url, width, height) {
+        if (state.previewUrl) {
+          URL.revokeObjectURL(state.previewUrl);
+        }
+        state.previewUrl = url;
+        svgPreview.src = url;
+        svgPreview.style.width = `${width}px`;
+        svgPreview.style.height = `${height}px`;
+        svgPreview.hidden = false;
+        svgEmpty.hidden = true;
+      }
+
+      function setOutputUrl(url) {
+        if (state.outputUrl) {
+          URL.revokeObjectURL(state.outputUrl);
+        }
+        state.outputUrl = url;
+        outputPreview.src = url;
+        outputPreview.hidden = false;
+        outputEmpty.hidden = true;
+      }
+
+      function clearOutput() {
+        if (state.outputUrl) {
+          URL.revokeObjectURL(state.outputUrl);
+        }
+        state.outputUrl = "";
+        state.outputBlob = null;
+        outputPreview.src = "";
+        outputPreview.hidden = true;
+        outputEmpty.hidden = false;
+        outputMeta.textContent = "No output yet.";
+        updateButtonState();
+      }
+
+      function clearPreview() {
+        if (state.previewUrl) {
+          URL.revokeObjectURL(state.previewUrl);
+        }
+        state.previewUrl = "";
+        state.normalizedSvg = "";
+        svgPreview.src = "";
+        svgPreview.hidden = true;
+        svgEmpty.hidden = false;
+        previewMeta.textContent = "";
+        sizeMeta.textContent = "";
+      }
+
+      function updateUrlState() {
+        const params = new URLSearchParams();
+        params.set("format", formatSelect.value);
+        if (widthInput.value) params.set("w", widthInput.value);
+        if (heightInput.value) params.set("h", heightInput.value);
+        if (scaleInput.value && scaleInput.value !== "1") params.set("scale", scaleInput.value);
+        if (qualityInput.value && qualityInput.value !== "0.92") params.set("q", qualityInput.value);
+        if (bgInput.value && bgInput.value.toLowerCase() !== "#ffffff") params.set("bg", bgInput.value);
+        if (!preserveViewBox.checked) params.set("preserve", "0");
+        if (urlInput.value) params.set("src", urlInput.value);
+
+        const query = params.toString();
+        const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+        window.history.replaceState(null, "", newUrl);
+      }
+
+      function applyUrlState() {
+        const params = new URLSearchParams(window.location.search);
+        const format = params.get("format");
+        if (format === "png" || format === "jpg") formatSelect.value = format;
+        const width = params.get("w");
+        if (width) widthInput.value = width;
+        const height = params.get("h");
+        if (height) heightInput.value = height;
+        const scale = params.get("scale");
+        if (scale) scaleInput.value = scale;
+        const quality = params.get("q");
+        if (quality) qualityInput.value = quality;
+        const bg = params.get("bg");
+        if (bg) bgInput.value = bg;
+        const preserve = params.get("preserve");
+        if (preserve === "0") preserveViewBox.checked = false;
+        const src = params.get("src");
+        if (src) urlInput.value = src;
+      }
+
+      async function renderSvgToBlob(svgText, outputWidth, outputHeight, options = {}) {
+        const outputFormat = options.format || formatSelect.value;
+        const useBackground = options.useBackground ?? outputFormat === "jpg";
+        const guardId = options.guardId ?? null;
+        const svgBlob = new Blob([svgText], { type: "image/svg+xml" });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        const img = new Image();
+        img.decoding = "async";
+        return new Promise((resolve, reject) => {
+          img.onload = () => {
+            if (guardId != null && guardId !== state.renderId) {
+              URL.revokeObjectURL(svgUrl);
+              resolve(null);
+              return;
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = outputWidth;
+            canvas.height = outputHeight;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              URL.revokeObjectURL(svgUrl);
+              reject(new Error("Canvas is not supported in this browser."));
+              return;
+            }
+            if (useBackground) {
+              ctx.fillStyle = bgInput.value || "#ffffff";
+              ctx.fillRect(0, 0, outputWidth, outputHeight);
+            }
+            ctx.drawImage(img, 0, 0, outputWidth, outputHeight);
+            const mime = outputFormat === "png" ? "image/png" : "image/jpeg";
+            const quality = clamp(readNumber(qualityInput.value) || 0.92, 0.1, 1);
+            canvas.toBlob(
+              (blob) => {
+                URL.revokeObjectURL(svgUrl);
+                if (guardId != null && guardId !== state.renderId) {
+                  resolve(null);
+                  return;
+                }
+                if (!blob) {
+                  reject(new Error("Unable to create output image."));
+                  return;
+                }
+                resolve(blob);
+              },
+              mime,
+              outputFormat === "png" ? undefined : quality
+            );
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(svgUrl);
+            reject(new Error("Could not render the SVG into an image."));
+          };
+          img.src = svgUrl;
+        });
+      }
+
+      async function refreshPreview() {
+        setError("");
+        if (!state.svgText.trim()) {
+          clearPreview();
+          clearOutput();
+          return;
+        }
+
+        let svg;
+        try {
+          const parsed = parseSvg(state.svgText);
+          svg = parsed.svg;
+          const { baseWidth, baseHeight, viewBox } = computeBaseSize(svg);
+          state.baseWidth = baseWidth;
+          state.baseHeight = baseHeight;
+          state.viewBox = viewBox;
+          const normalized = buildNormalizedSvg(svg, baseWidth, baseHeight);
+          state.normalizedSvg = normalized;
+          const previewBlob = new Blob([normalized], { type: "image/svg+xml" });
+          const previewUrl = URL.createObjectURL(previewBlob);
+          setPreviewUrl(previewUrl, baseWidth, baseHeight);
+          updateMeta();
+          fitPreview();
+
+          const { outWidth, outHeight } = computeOutputSize(baseWidth, baseHeight);
+          const guardId = ++state.renderId;
+          const outputBlob = await renderSvgToBlob(normalized, outWidth, outHeight, { guardId });
+          if (!outputBlob) return;
+          state.outputBlob = outputBlob;
+          const outputUrl = URL.createObjectURL(outputBlob);
+          setOutputUrl(outputUrl);
+          const kb = Math.round(outputBlob.size / 1024);
+          outputMeta.textContent = `${outWidth} x ${outHeight} px, ${formatSelect.value.toUpperCase()}, ${kb} KB`;
+          updateButtonState();
+        } catch (error) {
+          clearPreview();
+          clearOutput();
+          state.normalizedSvg = "";
+          setError(error.message || "Something went wrong while parsing the SVG.");
+        }
+      }
+
+      function scheduleRender() {
+        if (state.renderTimer) {
+          window.clearTimeout(state.renderTimer);
+        }
+        state.renderTimer = window.setTimeout(() => {
+          updateUrlState();
+          refreshPreview();
+        }, 300);
+      }
+
+      function handleFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          svgInput.value = String(reader.result || "");
+          state.svgText = svgInput.value;
+          scheduleRender();
+        };
+        reader.onerror = () => {
+          setError("Could not read the SVG file.");
+        };
+        reader.readAsText(file);
+      }
+
+      async function handleUrlLoad() {
+        const url = urlInput.value.trim();
+        if (!url) {
+          setError("Enter a URL to load an SVG.");
+          return;
+        }
+        setError("");
+        try {
+          const response = await fetch(url, { mode: "cors" });
+          if (!response.ok) {
+            throw new Error(`Failed to fetch SVG: ${response.status}`);
+          }
+          const text = await response.text();
+          svgInput.value = text;
+          state.svgText = text;
+          scheduleRender();
+        } catch (error) {
+          setError(error.message || "Could not load the SVG from that URL.");
+        }
+      }
+
+      function handleOpen() {
+        if (!state.outputUrl) return;
+        window.open(state.outputUrl, "_blank", "noopener,noreferrer");
+      }
+
+      function handleDownload() {
+        if (!state.outputBlob || !state.outputUrl) return;
+        const extension = formatSelect.value === "png" ? "png" : "jpg";
+        const link = document.createElement("a");
+        link.href = state.outputUrl;
+        link.download = `svg-export.${extension}`;
+        link.click();
+      }
+
+      svgInput.addEventListener("input", () => {
+        state.svgText = svgInput.value;
+        scheduleRender();
+      });
+
+      fileInput.addEventListener("change", (event) => {
+        const file = event.target.files && event.target.files[0];
+        handleFile(file);
+      });
+
+      loadUrl.addEventListener("click", () => {
+        handleUrlLoad();
+      });
+
+      urlInput.addEventListener("input", () => {
+        updateUrlState();
+      });
+
+      [formatSelect, widthInput, heightInput, scaleInput, qualityInput, bgInput, preserveViewBox].forEach(
+        (element) => {
+          element.addEventListener("input", () => {
+            scheduleRender();
+          });
+        }
+      );
+
+      downloadBtn.addEventListener("click", handleDownload);
+      openBtn.addEventListener("click", handleOpen);
+
+      zoomRange.addEventListener("input", (event) => {
+        state.previewTransform.scale = clamp(Number(event.target.value), 0.2, 4);
+        updatePreviewTransform();
+      });
+
+      fitBtn.addEventListener("click", () => {
+        fitPreview();
+      });
+
+      centerBtn.addEventListener("click", () => {
+        centerPreview();
+      });
+
+      svgViewport.addEventListener("pointerdown", (event) => {
+        if (svgPreview.hidden) return;
+        svgViewport.setPointerCapture(event.pointerId);
+        state.previewTransform.dragging = true;
+        state.previewTransform.startX = event.clientX - state.previewTransform.x;
+        state.previewTransform.startY = event.clientY - state.previewTransform.y;
+        svgViewport.style.cursor = "grabbing";
+      });
+
+      svgViewport.addEventListener("pointermove", (event) => {
+        if (!state.previewTransform.dragging) return;
+        state.previewTransform.x = event.clientX - state.previewTransform.startX;
+        state.previewTransform.y = event.clientY - state.previewTransform.startY;
+        updatePreviewTransform();
+      });
+
+      svgViewport.addEventListener("pointerup", () => {
+        state.previewTransform.dragging = false;
+        svgViewport.style.cursor = "grab";
+      });
+
+      svgViewport.addEventListener("pointerleave", () => {
+        state.previewTransform.dragging = false;
+        svgViewport.style.cursor = "grab";
+      });
+
+      applyUrlState();
+      updateUrlState();
+      updateButtonState();
+      const initialSrc = new URLSearchParams(window.location.search).get("src");
+      if (initialSrc) {
+        handleUrlLoad();
+      }
+    </script>
+  </body>
+</html>

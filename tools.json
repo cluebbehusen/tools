@@ -5,5 +5,12 @@
     "description": "Extracts a compact set of dominant colors from an image.",
     "createdAt": "2025-12-20",
     "updatedAt": "2025-12-20"
+  },
+  {
+    "slug": "svg-to-png-jpg-converter",
+    "title": "SVG to PNG/JPG Converter",
+    "description": "Convert SVG markup or files into PNG or JPG exports with preview controls.",
+    "createdAt": "2025-12-21",
+    "updatedAt": "2025-12-21"
   }
 ]
