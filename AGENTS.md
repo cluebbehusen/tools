@@ -19,12 +19,17 @@ JavaScript, designed to be easy to copy, paste, and host as static files.
 - The HTML file should include all CSS and JS inline.
 - Include a short title and a visible heading that matches the tool name.
 - Briefly document each tool in `tool-name.doc.md`.
+- Add each new tool to `tools.json` so it appears on the landing page.
 
 ## Dependencies
 
 - Use CDNJS or jsDelivr for third party libraries.
 - Pin exact versions in URLs.
 - Avoid heavy or unnecessary dependencies.
+
+## Style
+
+Use Space Grotesk for titles (600) and body text, with a calm slate/fog/sand gradient background, neutral blue-gray accents, and soft white cards.
 
 ## UX patterns to favor
 

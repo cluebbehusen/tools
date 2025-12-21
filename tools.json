@@ -1,0 +1,9 @@
+[
+  {
+    "slug": "color-palette-extractor",
+    "title": "Color Palette Extractor",
+    "description": "Extracts a compact set of dominant colors from an image.",
+    "createdAt": "2025-12-20",
+    "updatedAt": "2025-12-20"
+  }
+]

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HTML Tools</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap");
+      :root {
+        color-scheme: light;
+        --bg: #d3d8e0;
+        --bg-accent: #eef1f4;
+        --ink: #151b26;
+        --muted: #4b5566;
+        --accent: #2f4a70;
+        --surface: #f3f4f6;
+        --surface-2: #ffffff;
+        --stroke: rgba(21, 27, 38, 0.14);
+        --shadow: 0 32px 60px rgba(21, 27, 38, 0.18);
+        --radius: 24px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background: radial-gradient(circle at 12% 12%, #e6d8c8 0, transparent 52%),
+          radial-gradient(circle at 80% 18%, #cfd7e3 0, transparent 48%),
+          linear-gradient(145deg, var(--bg) 0%, var(--bg-accent) 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        opacity: 0.35;
+        background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+        background-size: 26px 26px;
+        pointer-events: none;
+      }
+
+      main {
+        position: relative;
+        padding: 56px clamp(20px, 6vw, 80px) 80px;
+      }
+
+      header {
+        max-width: 960px;
+        margin: 0 auto 36px;
+        display: grid;
+        gap: 16px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.3rem, 4vw, 3.6rem);
+        letter-spacing: -0.01em;
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        font-weight: 600;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+        max-width: 640px;
+        line-height: 1.6;
+      }
+
+      .toolbar {
+        margin-top: 8px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+      }
+
+      .search {
+        display: grid;
+        gap: 6px;
+      }
+
+      .search label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--muted);
+      }
+
+      .search input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--stroke);
+        background: var(--surface-2);
+        font-size: 1rem;
+        font-family: inherit;
+      }
+
+      .stats {
+        align-self: end;
+        padding: 12px 16px;
+        border-radius: 999px;
+        background: var(--surface);
+        border: 1px solid var(--stroke);
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .grid {
+        max-width: 1080px;
+        margin: 40px auto 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+      }
+
+      .card {
+        background: var(--surface-2);
+        border-radius: var(--radius);
+        border: 1px solid var(--stroke);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        display: grid;
+        gap: 16px;
+        min-height: 220px;
+        animation: float-in 0.6s ease both;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: 1.4rem;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .empty {
+        grid-column: 1 / -1;
+        padding: 28px;
+        border-radius: var(--radius);
+        border: 1px dashed var(--stroke);
+        background: var(--surface-2);
+        color: var(--muted);
+      }
+
+      .empty h3 {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+        color: var(--ink);
+      }
+
+      .empty p {
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 18px;
+        border-radius: 14px;
+        border: 1px solid transparent;
+        background: var(--accent);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        min-height: 44px;
+        font-size: 0.95rem;
+        line-height: 1.1;
+      }
+
+      .button.secondary {
+        background: transparent;
+        border-color: var(--stroke);
+        color: var(--ink);
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+      }
+
+      @keyframes float-in {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .toolbar {
+          grid-template-columns: 1fr;
+        }
+
+        .stats {
+          width: fit-content;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>HTML Tools</h1>
+        <p>
+          LLM-generated utilities built with a coding agent. Each tool is a single-file HTML application.
+        </p>
+        <div class="toolbar">
+          <div class="search">
+            <label for="filter">Filter tools</label>
+            <input id="filter" type="search" placeholder="Try: palette, image, css" autocomplete="off" />
+          </div>
+          <div class="stats" id="stats">Loading tools...</div>
+        </div>
+      </header>
+
+      <section class="grid" id="grid" aria-live="polite"></section>
+
+    </main>
+
+    <script>
+      const grid = document.getElementById("grid");
+      const stats = document.getElementById("stats");
+      const filterInput = document.getElementById("filter");
+      const toolsState = {
+        items: [],
+        error: false,
+      };
+
+      const params = new URLSearchParams(window.location.search);
+      const initialFilter = params.get("q") || "";
+      filterInput.value = initialFilter;
+
+      function setQuery(value) {
+        const trimmed = value.trim();
+        if (trimmed) {
+          params.set("q", trimmed);
+        } else {
+          params.delete("q");
+        }
+        const query = params.toString();
+        const next = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+        window.history.replaceState({}, "", next);
+      }
+
+      function toDocLine(text) {
+        const lines = text.split(/\r?\n/);
+        let found = "";
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            if (found) {
+              break;
+            }
+            continue;
+          }
+          if (trimmed.startsWith("#")) {
+            continue;
+          }
+          found = trimmed.replace(/^[-*]\s+/, "");
+          break;
+        }
+        return found || "No description provided yet.";
+      }
+
+      async function loadTool(tool) {
+        const fallback = tool.description || "No description provided yet.";
+        try {
+          const response = await fetch(`${tool.slug}.doc.md`);
+          if (!response.ok) {
+            throw new Error("missing doc");
+          }
+          const text = await response.text();
+          return { ...tool, description: toDocLine(text) || fallback };
+        } catch (err) {
+          return { ...tool, description: fallback };
+        }
+      }
+
+      function render(list, options = {}) {
+        const { error = false } = options;
+        grid.innerHTML = "";
+        const query = filterInput.value.trim().toLowerCase();
+        const filtered = list.filter((tool) => {
+          if (!query) {
+            return true;
+          }
+          const haystack = `${tool.title} ${tool.slug} ${tool.description}`.toLowerCase();
+          return haystack.includes(query);
+        });
+
+        if (error) {
+          stats.textContent = "Tools list unavailable";
+        } else if (query) {
+          stats.textContent = `${filtered.length} match${filtered.length === 1 ? "" : "es"}`;
+        } else {
+          stats.textContent = `${filtered.length} tool${filtered.length === 1 ? "" : "s"} ready`;
+        }
+
+        if (filtered.length === 0) {
+          let title = "No tools yet";
+          let message = "Add entries to tools.json to populate this page.";
+          if (query) {
+            title = "No matches";
+            message = "Try a different keyword or clear the filter.";
+          } else if (error) {
+            title = "Tools list unavailable";
+            message =
+              window.location.protocol === "file:"
+                ? "Open this page with a local server or GitHub Pages so tools.json can be fetched."
+                : "Check that tools.json exists and is valid JSON.";
+          }
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.innerHTML = `<h3>${title}</h3><p>${message}</p>`;
+          grid.appendChild(empty);
+          return;
+        }
+
+        filtered.forEach((tool, index) => {
+          const createdAt = tool.createdAt || "";
+          const updatedAt = tool.updatedAt || tool.createdAt || "";
+          let metaHtml = "";
+          if (createdAt) {
+            if (updatedAt && updatedAt !== createdAt) {
+              metaHtml = `<div class="meta"><span>Created ${createdAt}</span><span>Updated ${updatedAt}</span></div>`;
+            } else {
+              metaHtml = `<div class="meta"><span>Created ${createdAt}</span></div>`;
+            }
+          }
+          const card = document.createElement("article");
+          card.className = "card";
+          card.style.animationDelay = `${index * 80}ms`;
+          card.innerHTML = `
+            <div>
+              <h2>${tool.title}</h2>
+              <p>${tool.description}</p>
+            </div>
+            ${metaHtml}
+            <div class="actions">
+              <a class="button" href="${tool.slug}.html">Open tool</a>
+              <a class="button secondary" href="${tool.slug}.doc.md">View doc</a>
+              <button class="button secondary" data-copy="${tool.slug}.html" type="button">Copy link</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      }
+
+      function attachCopyHandlers() {
+        grid.addEventListener("click", async (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLButtonElement)) {
+            return;
+          }
+          const link = target.getAttribute("data-copy");
+          if (!link) {
+            return;
+          }
+          const url = new URL(link, window.location.href).toString();
+          try {
+            await navigator.clipboard.writeText(url);
+            target.textContent = "Copied!";
+            setTimeout(() => {
+              target.textContent = "Copy link";
+            }, 1600);
+          } catch (err) {
+            window.prompt("Copy the link:", url);
+          }
+        });
+      }
+
+      async function loadToolsList() {
+        try {
+          const response = await fetch("tools.json", { cache: "no-store" });
+          if (!response.ok) {
+            throw new Error("missing list");
+          }
+          const data = await response.json();
+          if (!Array.isArray(data)) {
+            throw new Error("invalid list");
+          }
+          return { items: data, error: false };
+        } catch (err) {
+          return { items: [], error: true };
+        }
+      }
+
+      async function init() {
+        stats.textContent = "Loading tools...";
+        const result = await loadToolsList();
+        toolsState.error = result.error;
+        toolsState.items = await Promise.all(result.items.map(loadTool));
+        render(toolsState.items, { error: toolsState.error });
+      }
+
+      filterInput.addEventListener("input", (event) => {
+        setQuery(event.target.value);
+        render(toolsState.items, { error: toolsState.error });
+      });
+
+      attachCopyHandlers();
+      init();
+    </script>
+  </body>
+</html>

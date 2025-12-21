@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Color Palette Extractor</title>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@400;500;600&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap");
 
       :root {
-        --ink: #1b1b1d;
-        --muted: #5d616b;
-        --accent: #ff7a59;
-        --accent-2: #2b8cff;
-        --card: rgba(255, 255, 255, 0.86);
-        --stroke: rgba(27, 27, 29, 0.12);
-        --shadow: 0 30px 60px rgba(24, 24, 30, 0.18);
+        --ink: #151b26;
+        --muted: #4b5566;
+        --accent: #2f4a70;
+        --accent-2: #3b6aa0;
+        --card: rgba(255, 255, 255, 0.9);
+        --stroke: rgba(21, 27, 38, 0.12);
+        --shadow: 0 30px 60px rgba(21, 27, 38, 0.18);
         --radius: 18px;
       }
 
@@ -28,9 +28,9 @@
         font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(circle at 10% 10%, #ffe1c2 0%, transparent 45%),
-          radial-gradient(circle at 80% 20%, #c8e7ff 0%, transparent 50%),
-          linear-gradient(140deg, #fff4eb 0%, #f3f7ff 50%, #fff 100%);
+          radial-gradient(circle at 12% 12%, #e6d8c8 0%, transparent 52%),
+          radial-gradient(circle at 80% 18%, #cfd7e3 0%, transparent 48%),
+          linear-gradient(145deg, #d3d8e0 0%, #eef1f4 100%);
       }
 
       .page {
@@ -48,10 +48,11 @@
       }
 
       header h1 {
-        font-family: "DM Serif Display", "Times New Roman", serif;
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
         font-size: clamp(2.2rem, 4vw, 3.4rem);
         margin: 0;
-        letter-spacing: 0.5px;
+        letter-spacing: -0.01em;
+        font-weight: 600;
       }
 
       header p {
@@ -75,11 +76,11 @@
       }
 
       .dropzone {
-        border: 2px dashed rgba(43, 140, 255, 0.35);
+        border: 2px dashed rgba(59, 106, 160, 0.35);
         border-radius: 16px;
         padding: 24px;
         text-align: center;
-        background: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.7);
         transition: border-color 150ms ease, background 150ms ease;
         min-height: 220px;
         display: flex;
@@ -91,7 +92,7 @@
 
       .dropzone.dragover {
         border-color: var(--accent);
-        background: rgba(255, 234, 224, 0.7);
+        background: rgba(231, 236, 244, 0.8);
       }
 
       .dropzone button {
@@ -107,7 +108,7 @@
 
       .dropzone button:hover {
         transform: translateY(-1px);
-        box-shadow: 0 10px 20px rgba(255, 122, 89, 0.25);
+        box-shadow: 0 10px 20px rgba(47, 74, 112, 0.25);
       }
 
       .hint {
@@ -126,10 +127,10 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        background: #fff;
+        background: #ffffff;
         border-radius: 999px;
         padding: 8px 14px;
-        border: 1px solid rgba(27, 27, 29, 0.08);
+        border: 1px solid rgba(21, 27, 38, 0.08);
       }
 
       .control input[type="range"] {
@@ -164,14 +165,14 @@
       }
 
       .actions button:disabled {
-        background: #b9c8e8;
+        background: #bcc5d3;
         cursor: not-allowed;
         box-shadow: none;
       }
 
       .actions button:not(:disabled):hover {
         transform: translateY(-1px);
-        box-shadow: 0 10px 18px rgba(43, 140, 255, 0.25);
+        box-shadow: 0 10px 18px rgba(59, 106, 160, 0.25);
       }
 
       .stats {
@@ -189,8 +190,8 @@
       .image-wrap {
         border-radius: 16px;
         overflow: hidden;
-        border: 1px solid rgba(27, 27, 29, 0.1);
-        background: #fff;
+        border: 1px solid rgba(21, 27, 38, 0.1);
+        background: #ffffff;
         min-height: 200px;
         display: flex;
         align-items: center;
@@ -215,7 +216,7 @@
         flex-direction: column;
         gap: 6px;
         min-height: 88px;
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.12);
         position: relative;
         overflow: hidden;
         animation: pop 420ms ease-out both;
@@ -224,7 +225,7 @@
 
       .swatch button {
         border: none;
-        background: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.75);
         padding: 4px 8px;
         border-radius: 999px;
         font-size: 0.75rem;
@@ -461,7 +462,7 @@
 
         palette.forEach((color, index) => {
           const swatch = document.createElement("div");
-          const textColor = luminance(color.rgb) > 140 ? "#1b1b1d" : "#ffffff";
+          const textColor = luminance(color.rgb) > 140 ? "#151b26" : "#ffffff";
           swatch.className = "swatch";
           swatch.style.background = color.hex;
           swatch.style.color = textColor;
