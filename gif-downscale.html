@@ -484,6 +484,10 @@
             processedFrameCount++;
           }
 
+          gif.on('progress', (p) => {
+            showStatus(`Processing... ${Math.round(p * 100)}%`, 'processing');
+          });
+
           gif.on('finished', (blob) => {
             processedBlob = blob;
             const url = URL.createObjectURL(blob);
@@ -512,6 +516,11 @@
             downloadBtn.disabled = false;
             processBtn.disabled = false;
             showStatus('Processing complete!', 'success');
+          });
+
+          gif.on('error', (err) => {
+            showStatus('Error encoding GIF: ' + err, 'error');
+            processBtn.disabled = false;
           });
 
           gif.render();
