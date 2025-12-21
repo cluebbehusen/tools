@@ -180,6 +180,10 @@
         width: 100%;
       }
 
+      button + button {
+        margin-top: 12px;
+      }
+
       button:hover:not(:disabled) {
         background: var(--accent-2);
         transform: translateY(-1px);
@@ -354,11 +358,11 @@
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/dist/gifuct-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
     <script>
       let originalFile = null;
-      let originalGif = null;
+      let originalFrames = null;
       let processedBlob = null;
 
       const fileInput = document.getElementById('fileInput');
@@ -404,10 +408,21 @@
 
         try {
           const arrayBuffer = await file.arrayBuffer();
-          originalGif = gifuct.parseGIF(arrayBuffer);
-          const frames = gifuct.decompressFrames(originalGif, true);
+          const uint8Array = new Uint8Array(arrayBuffer);
+          const reader = new GifReader(uint8Array);
 
-          originalInfo.innerHTML += `<div class="file-info">Frames: ${frames.length}</div>`;
+          const numFrames = reader.numFrames();
+          const width = reader.width;
+          const height = reader.height;
+
+          originalFrames = {
+            reader: reader,
+            count: numFrames,
+            width: width,
+            height: height
+          };
+
+          originalInfo.innerHTML += `<div class="file-info">Frames: ${numFrames}</div>`;
           processBtn.disabled = false;
         } catch (err) {
           showStatus('Error loading GIF: ' + err.message, 'error');
@@ -416,7 +431,7 @@
       });
 
       processBtn.addEventListener('click', async () => {
-        if (!originalGif) return;
+        if (!originalFrames) return;
 
         processBtn.disabled = true;
         downloadBtn.disabled = true;
@@ -427,13 +442,9 @@
           const skip = parseInt(frameSkip.value);
           const quality = parseInt(qualitySlider.value);
 
-          const frames = gifuct.decompressFrames(originalGif, true);
-
-          const filteredFrames = frames.filter((_, i) => i % skip === 0);
-
-          const firstFrame = filteredFrames[0];
-          const newWidth = Math.round(firstFrame.dims.width * scale);
-          const newHeight = Math.round(firstFrame.dims.height * scale);
+          const reader = originalFrames.reader;
+          const newWidth = Math.round(originalFrames.width * scale);
+          const newHeight = Math.round(originalFrames.height * scale);
 
           const gif = new GIF({
             workers: 2,
@@ -444,16 +455,20 @@
           });
 
           const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = originalFrames.width;
+          tempCanvas.height = originalFrames.height;
           const tempCtx = tempCanvas.getContext('2d');
 
-          for (let i = 0; i < filteredFrames.length; i++) {
-            const frame = filteredFrames[i];
+          const framePixels = new Uint8ClampedArray(originalFrames.width * originalFrames.height * 4);
+          let processedFrameCount = 0;
 
-            tempCanvas.width = frame.dims.width;
-            tempCanvas.height = frame.dims.height;
+          for (let i = 0; i < originalFrames.count; i++) {
+            if (i % skip !== 0) continue;
 
-            const imageData = tempCtx.createImageData(frame.dims.width, frame.dims.height);
-            imageData.data.set(frame.patch);
+            reader.decodeAndBlitFrameRGBA(i, framePixels);
+
+            const imageData = tempCtx.createImageData(originalFrames.width, originalFrames.height);
+            imageData.data.set(framePixels);
             tempCtx.putImageData(imageData, 0, 0);
 
             const scaledCanvas = document.createElement('canvas');
@@ -462,7 +477,11 @@
             const scaledCtx = scaledCanvas.getContext('2d');
             scaledCtx.drawImage(tempCanvas, 0, 0, newWidth, newHeight);
 
-            gif.addFrame(scaledCanvas, { delay: frame.delay });
+            const frameInfo = reader.frameInfo(i);
+            const delay = frameInfo.delay * 10;
+
+            gif.addFrame(scaledCanvas, { delay: delay });
+            processedFrameCount++;
           }
 
           gif.on('finished', (blob) => {
@@ -470,7 +489,7 @@
             const url = URL.createObjectURL(blob);
             optimizedPreview.innerHTML = `<img src="${url}" alt="Optimized GIF">`;
             optimizedInfo.innerHTML = `<div class="file-info">Size: ${formatBytes(blob.size)}</div>`;
-            optimizedInfo.innerHTML += `<div class="file-info">Frames: ${filteredFrames.length}</div>`;
+            optimizedInfo.innerHTML += `<div class="file-info">Frames: ${processedFrameCount}</div>`;
 
             const savings = ((1 - blob.size / originalFile.size) * 100).toFixed(1);
             comparisonArea.innerHTML = `
