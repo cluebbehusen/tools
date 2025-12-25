@@ -14,6 +14,13 @@
     "updatedAt": "2025-12-25"
   },
   {
+    "slug": "unix-timestamp-converter",
+    "title": "Unix Timestamp Converter",
+    "description": "Convert Unix timestamps in seconds, milliseconds, microseconds, or nanoseconds to readable UTC dates.",
+    "createdAt": "2025-12-25",
+    "updatedAt": "2025-12-25"
+  },
+  {
     "slug": "svg-to-png-jpg-converter",
     "title": "SVG to PNG/JPG Converter",
     "description": "Convert SVG markup or files into PNG or JPG exports with preview controls.",
