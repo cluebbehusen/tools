@@ -82,6 +82,7 @@
         box-shadow: var(--shadow);
         backdrop-filter: blur(12px);
         animation: rise 800ms ease-out both;
+        min-width: 0;
       }
 
       .section {
@@ -121,6 +122,7 @@
         cursor: pointer;
         font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
         font-size: 0.95rem;
+        width: 100%;
       }
 
       input[type="range"] {
@@ -158,6 +160,7 @@
         font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
         font-size: 0.95rem;
         background: rgba(255, 255, 255, 0.8);
+        width: 100%;
       }
 
       .value-display {
@@ -287,13 +290,17 @@
       .savings {
         color: #4caf50;
       }
+
+      .increase {
+        color: #d1544f;
+      }
     </style>
   </head>
   <body>
     <div class="page">
       <header>
         <h1>GIF Downscale Tool</h1>
-        <p>Reduce GIF file sizes by downscaling, skipping frames, and optimizing colors.</p>
+        <p>Reduce GIF file sizes by downscaling and skipping frames.</p>
       </header>
 
       <div class="panel">
@@ -323,15 +330,9 @@
             </div>
           </div>
 
-          <div class="section">
-            <div class="control-group">
-              <label>Color Quality: <span class="value-display" id="qualityValue">10 (best)</span></label>
-              <input type="range" id="qualitySlider" min="1" max="30" value="10">
-            </div>
-          </div>
-
           <button id="processBtn" disabled>Process GIF</button>
           <button id="downloadBtn" disabled>Download Optimized GIF</button>
+          <button id="openBtn" disabled>Open Output in New Tab</button>
 
           <div id="statusArea"></div>
         </div>
@@ -359,22 +360,20 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
-    <script>
+    <script type="module">
+      import gifsicle from 'https://cdn.jsdelivr.net/npm/gifsicle-wasm-browser@1.5.19/dist/gifsicle.min.js';
       let originalFile = null;
       let originalFrames = null;
       let processedBlob = null;
-      const workerScriptSource = 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js';
-      let workerScriptBlobUrl = null;
-
+      let originalUrl = null;
+      let processedUrl = null;
       const fileInput = document.getElementById('fileInput');
       const scaleSlider = document.getElementById('scaleSlider');
       const scaleValue = document.getElementById('scaleValue');
       const frameSkip = document.getElementById('frameSkip');
-      const qualitySlider = document.getElementById('qualitySlider');
-      const qualityValue = document.getElementById('qualityValue');
       const processBtn = document.getElementById('processBtn');
       const downloadBtn = document.getElementById('downloadBtn');
+      const openBtn = document.getElementById('openBtn');
       const originalPreview = document.getElementById('originalPreview');
       const optimizedPreview = document.getElementById('optimizedPreview');
       const originalInfo = document.getElementById('originalInfo');
@@ -386,26 +385,28 @@
         scaleValue.textContent = scaleSlider.value + '%';
       });
 
-      qualitySlider.addEventListener('input', () => {
-        const val = qualitySlider.value;
-        const label = val <= 10 ? 'best' : val <= 20 ? 'good' : 'fast';
-        qualityValue.textContent = `${val} (${label})`;
-      });
-
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         originalFile = file;
         processedBlob = null;
+        if (processedUrl && processedUrl !== originalUrl) {
+          URL.revokeObjectURL(processedUrl);
+        }
+        if (originalUrl) {
+          URL.revokeObjectURL(originalUrl);
+        }
+        processedUrl = null;
         downloadBtn.disabled = true;
+        openBtn.disabled = true;
         optimizedPreview.innerHTML = '<span class="preview-label">Not processed yet</span>';
         optimizedInfo.innerHTML = '';
         comparisonArea.innerHTML = '';
         statusArea.innerHTML = '';
 
-        const url = URL.createObjectURL(file);
-        originalPreview.innerHTML = `<img src="${url}" alt="Original GIF">`;
+        originalUrl = URL.createObjectURL(file);
+        originalPreview.innerHTML = `<img src="${originalUrl}" alt="Original GIF">`;
         originalInfo.innerHTML = `<div class="file-info">Size: ${formatBytes(file.size)}</div>`;
 
         try {
@@ -437,68 +438,20 @@
 
         processBtn.disabled = true;
         downloadBtn.disabled = true;
+        openBtn.disabled = true;
         showStatus('Processing...', 'processing');
 
         try {
           const scale = scaleSlider.value / 100;
           const skip = parseInt(frameSkip.value);
-          const quality = parseInt(qualitySlider.value);
 
-          const reader = originalFrames.reader;
-          const newWidth = Math.round(originalFrames.width * scale);
-          const newHeight = Math.round(originalFrames.height * scale);
+          if (scale === 1 && skip === 1) {
+            processedBlob = originalFile;
+            processedUrl = originalUrl;
+            optimizedPreview.innerHTML = `<img src="${processedUrl}" alt="Optimized GIF">`;
+            optimizedInfo.innerHTML = `<div class="file-info">Size: ${formatBytes(originalFile.size)}</div>`;
+            optimizedInfo.innerHTML += `<div class="file-info">Frames: ${originalFrames.count}</div>`;
 
-          const workerScript = await resolveWorkerScriptUrl();
-          const gif = new GIF({
-            workers: 2,
-            quality: quality,
-            width: newWidth,
-            height: newHeight,
-            workerScript: workerScript
-          });
-
-          const tempCanvas = document.createElement('canvas');
-          tempCanvas.width = originalFrames.width;
-          tempCanvas.height = originalFrames.height;
-          const tempCtx = tempCanvas.getContext('2d');
-
-          const framePixels = new Uint8ClampedArray(originalFrames.width * originalFrames.height * 4);
-          let processedFrameCount = 0;
-
-          for (let i = 0; i < originalFrames.count; i++) {
-            if (i % skip !== 0) continue;
-
-            reader.decodeAndBlitFrameRGBA(i, framePixels);
-
-            const imageData = tempCtx.createImageData(originalFrames.width, originalFrames.height);
-            imageData.data.set(framePixels);
-            tempCtx.putImageData(imageData, 0, 0);
-
-            const scaledCanvas = document.createElement('canvas');
-            scaledCanvas.width = newWidth;
-            scaledCanvas.height = newHeight;
-            const scaledCtx = scaledCanvas.getContext('2d');
-            scaledCtx.drawImage(tempCanvas, 0, 0, newWidth, newHeight);
-
-            const frameInfo = reader.frameInfo(i);
-            const delay = frameInfo.delay * 10;
-
-            gif.addFrame(scaledCanvas, { delay: delay });
-            processedFrameCount++;
-          }
-
-          gif.on('progress', (p) => {
-            showStatus(`Processing... ${Math.round(p * 100)}%`, 'processing');
-          });
-
-          gif.on('finished', (blob) => {
-            processedBlob = blob;
-            const url = URL.createObjectURL(blob);
-            optimizedPreview.innerHTML = `<img src="${url}" alt="Optimized GIF">`;
-            optimizedInfo.innerHTML = `<div class="file-info">Size: ${formatBytes(blob.size)}</div>`;
-            optimizedInfo.innerHTML += `<div class="file-info">Frames: ${processedFrameCount}</div>`;
-
-            const savings = ((1 - blob.size / originalFile.size) * 100).toFixed(1);
             comparisonArea.innerHTML = `
               <div class="comparison">
                 <div class="comparison-item">
@@ -507,26 +460,89 @@
                 </div>
                 <div class="comparison-item">
                   <div class="comparison-label">Optimized</div>
-                  <div class="comparison-value">${formatBytes(blob.size)}</div>
+                  <div class="comparison-value">${formatBytes(originalFile.size)}</div>
                 </div>
                 <div class="comparison-item">
                   <div class="comparison-label">Savings</div>
-                  <div class="comparison-value savings">${savings > 0 ? savings : '0'}%</div>
+                  <div class="comparison-value savings">0%</div>
                 </div>
               </div>
             `;
 
             downloadBtn.disabled = false;
+            openBtn.disabled = false;
             processBtn.disabled = false;
-            showStatus('Processing complete!', 'success');
+            showStatus('No changes applied.', 'success');
+            return;
+          }
+
+          const inputName = 'input.gif';
+          const outputName = 'output.gif';
+          const commandParts = ['-O3'];
+          if (scale !== 1) {
+            commandParts.push('--scale', formatScale(scale));
+          }
+          commandParts.push(inputName);
+
+          let processedFrameCount = originalFrames.count;
+          if (skip > 1) {
+            const selection = buildFrameSelection(originalFrames.reader, originalFrames.count, skip);
+            processedFrameCount = selection.length;
+            selection.forEach((item) => {
+              commandParts.push('-d', String(item.delay));
+              commandParts.push(`#${item.index}`);
+            });
+          }
+
+          commandParts.push('-o', `/out/${outputName}`);
+
+          const results = await gifsicle.run({
+            input: [{ file: originalFile, name: inputName }],
+            command: [commandParts.join(' ')],
+            isStrict: false
           });
 
-          gif.on('error', (err) => {
-            showStatus('Error encoding GIF: ' + err, 'error');
-            processBtn.disabled = false;
-          });
+          if (!results || !results.length) {
+            throw new Error('No output returned from gifsicle.');
+          }
 
-          gif.render();
+          const outputFile = results.find((file) => file.name === outputName) || results[0];
+          processedBlob = outputFile;
+          if (processedUrl && processedUrl !== originalUrl) {
+            URL.revokeObjectURL(processedUrl);
+          }
+          processedUrl = URL.createObjectURL(outputFile);
+          optimizedPreview.innerHTML = `<img src="${processedUrl}" alt="Optimized GIF">`;
+          optimizedInfo.innerHTML = `<div class="file-info">Size: ${formatBytes(outputFile.size)}</div>`;
+          optimizedInfo.innerHTML += `<div class="file-info">Frames: ${processedFrameCount}</div>`;
+
+          const savingsRaw = (1 - outputFile.size / originalFile.size) * 100;
+          const savings = Math.abs(savingsRaw).toFixed(1);
+          const isIncrease = savingsRaw < 0;
+          const savingsLabel = isIncrease ? 'Increase' : 'Savings';
+          const savingsValue = `${isIncrease ? '+' : ''}${savings}%`;
+          const savingsClass = isIncrease ? 'increase' : 'savings';
+          comparisonArea.innerHTML = `
+            <div class="comparison">
+              <div class="comparison-item">
+                <div class="comparison-label">Original</div>
+                <div class="comparison-value">${formatBytes(originalFile.size)}</div>
+              </div>
+              <div class="comparison-item">
+                <div class="comparison-label">Optimized</div>
+                <div class="comparison-value">${formatBytes(outputFile.size)}</div>
+              </div>
+              <div class="comparison-item">
+                <div class="comparison-label">${savingsLabel}</div>
+                <div class="comparison-value ${savingsClass}">${savingsValue}</div>
+              </div>
+            </div>
+          `;
+
+          downloadBtn.disabled = false;
+          openBtn.disabled = false;
+          processBtn.disabled = false;
+          showStatus('Processing complete!', 'success');
         } catch (err) {
           showStatus('Error processing GIF: ' + err.message, 'error');
           processBtn.disabled = false;
@@ -536,14 +552,17 @@
       downloadBtn.addEventListener('click', () => {
         if (!processedBlob) return;
 
-        const url = URL.createObjectURL(processedBlob);
         const a = document.createElement('a');
-        a.href = url;
+        a.href = processedUrl;
         a.download = 'optimized.gif';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+      });
+
+      openBtn.addEventListener('click', () => {
+        if (!processedUrl) return;
+        window.open(processedUrl, '_blank', 'noopener');
       });
 
       function formatBytes(bytes) {
@@ -558,21 +577,21 @@
         statusArea.innerHTML = `<div class="status ${type}">${message}</div>`;
       }
 
-      async function resolveWorkerScriptUrl() {
-        if (workerScriptBlobUrl) return workerScriptBlobUrl;
+      function formatScale(scale) {
+        return scale.toFixed(3).replace(/\.?0+$/, '');
+      }
 
-        try {
-          const response = await fetch(workerScriptSource, { cache: 'force-cache' });
-          if (!response.ok) {
-            throw new Error(`Worker fetch failed: ${response.status}`);
+      function buildFrameSelection(reader, count, skip) {
+        const selection = [];
+        for (let i = 0; i < count; i += skip) {
+          let delay = 0;
+          const end = Math.min(i + skip, count);
+          for (let j = i; j < end; j++) {
+            delay += reader.frameInfo(j).delay;
           }
-          const scriptText = await response.text();
-          const blob = new Blob([scriptText], { type: 'text/javascript' });
-          workerScriptBlobUrl = URL.createObjectURL(blob);
-          return workerScriptBlobUrl;
-        } catch (err) {
-          return workerScriptSource;
+          selection.push({ index: i, delay: delay });
         }
+        return selection;
       }
     </script>
   </body>
