@@ -1,5 +1,12 @@
 [
   {
+    "slug": "password-generator",
+    "title": "Password Generator",
+    "description": "Generate cryptographically secure random passwords with customizable length and character types.",
+    "createdAt": "2025-12-25",
+    "updatedAt": "2025-12-25"
+  },
+  {
     "slug": "uuid-generator",
     "title": "UUID Generator",
     "description": "Generate random UUIDs (v4) individually or in bulk.",
