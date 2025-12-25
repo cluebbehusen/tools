@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>UUID Generator</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap");
+
+      :root {
+        --ink: #151b26;
+        --muted: #4b5566;
+        --accent: #2f4a70;
+        --accent-2: #3b6aa0;
+        --card: rgba(255, 255, 255, 0.9);
+        --stroke: rgba(21, 27, 38, 0.12);
+        --shadow: 0 30px 60px rgba(21, 27, 38, 0.18);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 12%, #e6d8c8 0%, transparent 52%),
+          radial-gradient(circle at 80% 18%, #cfd7e3 0%, transparent 48%),
+          linear-gradient(145deg, #d3d8e0 0%, #eef1f4 100%);
+      }
+
+      .page {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 48px 20px 64px;
+      }
+
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 28px;
+        animation: rise 600ms ease-out both;
+      }
+
+      header h1 {
+        font-size: clamp(2.2rem, 4vw, 3.4rem);
+        margin: 0;
+        letter-spacing: -0.01em;
+        font-weight: 600;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .card {
+        padding: 26px;
+        border-radius: var(--radius);
+        background: var(--card);
+        border: 1px solid var(--stroke);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+        animation: rise 700ms ease-out both;
+        margin-bottom: 20px;
+      }
+
+      .single-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .generate-btn {
+        border: none;
+        background: var(--accent);
+        color: #fff;
+        padding: 16px 32px;
+        border-radius: 999px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+
+      .generate-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(47, 74, 112, 0.3);
+      }
+
+      .generate-btn:active {
+        transform: translateY(0);
+      }
+
+      .uuid-display {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 14px 16px;
+        border: 1px solid var(--stroke);
+      }
+
+      .uuid-display code {
+        flex: 1;
+        font-family: "SF Mono", "Monaco", "Consolas", monospace;
+        font-size: 1.05rem;
+        word-break: break-all;
+        color: var(--ink);
+      }
+
+      .copy-btn {
+        border: none;
+        background: var(--accent-2);
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+        white-space: nowrap;
+      }
+
+      .copy-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 12px rgba(59, 106, 160, 0.25);
+      }
+
+      .copy-btn.copied {
+        background: #2d8a5f;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+        margin: 0 0 16px 0;
+        font-weight: 600;
+      }
+
+      .bulk-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .count-input {
+        width: 80px;
+        padding: 10px 12px;
+        border: 1px solid var(--stroke);
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+      }
+
+      .count-input:focus {
+        outline: none;
+        border-color: var(--accent-2);
+      }
+
+      .bulk-btn {
+        border: none;
+        background: var(--accent);
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+
+      .bulk-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 16px rgba(47, 74, 112, 0.25);
+      }
+
+      .format-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .format-toggle input {
+        accent-color: var(--accent-2);
+      }
+
+      .bulk-output {
+        background: #f8f9fa;
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+        padding: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+        margin-bottom: 12px;
+      }
+
+      .uuid-item {
+        font-family: "SF Mono", "Monaco", "Consolas", monospace;
+        font-size: 0.9rem;
+        padding: 8px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 100ms ease;
+        word-break: break-all;
+      }
+
+      .uuid-item:hover {
+        background: rgba(59, 106, 160, 0.1);
+      }
+
+      .uuid-item.copied {
+        background: rgba(45, 138, 95, 0.15);
+      }
+
+      .bulk-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .empty-state {
+        color: var(--muted);
+        text-align: center;
+        padding: 20px;
+        font-size: 0.95rem;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <h1>UUID Generator</h1>
+        <p>Generate random UUIDs (v4). Runs entirely in your browser.</p>
+      </header>
+
+      <div class="card">
+        <div class="single-section">
+          <button class="generate-btn" id="generateBtn">Generate UUID</button>
+          <div class="uuid-display">
+            <code id="uuidOutput">Click generate to create a UUID</code>
+            <button class="copy-btn" id="copyBtn">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Bulk Generate</h2>
+        <div class="bulk-controls">
+          <input type="number" class="count-input" id="countInput" value="10" min="1" max="1000">
+          <button class="bulk-btn" id="bulkBtn">Generate</button>
+          <label class="format-toggle">
+            <input type="checkbox" id="jsonToggle">
+            JSON array
+          </label>
+        </div>
+        <div class="bulk-output" id="bulkOutput">
+          <div class="empty-state">Generated UUIDs will appear here</div>
+        </div>
+        <div class="bulk-actions">
+          <button class="copy-btn" id="copyAllBtn">Copy All</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const generateBtn = document.getElementById("generateBtn");
+      const uuidOutput = document.getElementById("uuidOutput");
+      const copyBtn = document.getElementById("copyBtn");
+      const countInput = document.getElementById("countInput");
+      const bulkBtn = document.getElementById("bulkBtn");
+      const jsonToggle = document.getElementById("jsonToggle");
+      const bulkOutput = document.getElementById("bulkOutput");
+      const copyAllBtn = document.getElementById("copyAllBtn");
+
+      let currentUuid = "";
+      let bulkUuids = [];
+
+      function generateUuid() {
+        return crypto.randomUUID();
+      }
+
+      function copyText(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          return navigator.clipboard.writeText(text);
+        }
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+        return Promise.resolve();
+      }
+
+      function flashCopied(btn) {
+        btn.classList.add("copied");
+        const original = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => {
+          btn.classList.remove("copied");
+          btn.textContent = original;
+        }, 1000);
+      }
+
+      generateBtn.addEventListener("click", () => {
+        currentUuid = generateUuid();
+        uuidOutput.textContent = currentUuid;
+      });
+
+      copyBtn.addEventListener("click", () => {
+        if (currentUuid) {
+          copyText(currentUuid).then(() => flashCopied(copyBtn));
+        }
+      });
+
+      bulkBtn.addEventListener("click", () => {
+        const count = Math.max(1, Math.min(1000, parseInt(countInput.value) || 10));
+        countInput.value = count;
+        bulkUuids = [];
+
+        for (let i = 0; i < count; i++) {
+          bulkUuids.push(generateUuid());
+        }
+
+        renderBulkOutput();
+      });
+
+      jsonToggle.addEventListener("change", renderBulkOutput);
+
+      function renderBulkOutput() {
+        if (bulkUuids.length === 0) {
+          bulkOutput.innerHTML = '<div class="empty-state">Generated UUIDs will appear here</div>';
+          return;
+        }
+
+        if (jsonToggle.checked) {
+          const json = JSON.stringify(bulkUuids, null, 2);
+          bulkOutput.innerHTML = "";
+          const pre = document.createElement("pre");
+          pre.style.margin = "0";
+          pre.style.fontFamily = '"SF Mono", "Monaco", "Consolas", monospace';
+          pre.style.fontSize = "0.85rem";
+          pre.style.whiteSpace = "pre-wrap";
+          pre.style.wordBreak = "break-all";
+          pre.textContent = json;
+          bulkOutput.appendChild(pre);
+        } else {
+          bulkOutput.innerHTML = "";
+          bulkUuids.forEach((uuid, index) => {
+            const item = document.createElement("div");
+            item.className = "uuid-item";
+            item.textContent = uuid;
+            item.addEventListener("click", () => {
+              copyText(uuid).then(() => {
+                item.classList.add("copied");
+                setTimeout(() => item.classList.remove("copied"), 600);
+              });
+            });
+            bulkOutput.appendChild(item);
+          });
+        }
+      }
+
+      copyAllBtn.addEventListener("click", () => {
+        if (bulkUuids.length === 0) return;
+
+        let text;
+        if (jsonToggle.checked) {
+          text = JSON.stringify(bulkUuids, null, 2);
+        } else {
+          text = bulkUuids.join("\n");
+        }
+
+        copyText(text).then(() => flashCopied(copyAllBtn));
+      });
+
+      // Generate one on load
+      currentUuid = generateUuid();
+      uuidOutput.textContent = currentUuid;
+    </script>
+  </body>
+</html>
