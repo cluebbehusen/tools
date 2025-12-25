@@ -8,7 +8,8 @@ Generate cryptographically secure random passwords.
 - **Character type selection**: Mix lowercase, uppercase, numbers, and symbols
 - **Strength indicator**: Real-time entropy calculation shows password strength
 - **One-click copy**: Copy generated passwords to clipboard instantly
-- **Auto-generate on load**: A strong password is ready when you open the page
+- **Remembers your picks**: Length and character type preferences persist via local storage
+- **Auto-generate on load**: A strong password is ready when you open the page using your saved settings
 
 ## Security
 
