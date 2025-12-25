@@ -29,7 +29,7 @@
   },
   {
     "slug": "gif-downscale",
-    "title": "GIF Downscale Tool",
+    "title": "GIF Downscaler",
     "description": "Reduce GIF file sizes by downscaling and skipping frames.",
     "createdAt": "2025-12-21",
     "updatedAt": "2025-12-21"

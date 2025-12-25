@@ -137,6 +137,21 @@
         box-shadow: 0 12px 24px rgba(21, 27, 38, 0.08);
       }
 
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .checkbox-label input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
       .meta-bar {
         display: grid;
         gap: 10px;
@@ -266,7 +281,7 @@
       <header>
         <h1>Unix Timestamp Converter</h1>
         <p>
-          Paste or type a Unix timestamp and we'll infer seconds, milliseconds, microseconds, or
+          Paste or type a Unix timestamp and the tool will infer seconds, milliseconds, microseconds, or
           nanoseconds since the epoch. See the human-readable date instantly and copy the ISO 8601
           value in UTC.
         </p>
@@ -286,13 +301,16 @@
           <button type="button" class="primary" id="convertBtn">Convert</button>
           <button type="button" class="secondary" id="nowBtn">Use current time</button>
           <button type="button" class="secondary" id="clearBtn">Clear</button>
+          <label class="checkbox-label">
+            <input type="checkbox" id="subsecondCheckbox" />
+            Include subsecond precision
+          </label>
         </div>
 
         <div class="meta-bar">
           <div class="pill-row">
             <span class="pill"><strong>Detected:</strong> <span id="detectedUnit">—</span></span>
             <span class="pill"><strong>Digits:</strong> <span id="digitCount">0</span></span>
-            <span class="pill"><strong>Range:</strong> <span id="rangeLabel">Waiting for input</span></span>
           </div>
         </div>
 
@@ -303,7 +321,6 @@
               <div class="mono-box" id="isoOutput">—</div>
               <button type="button" class="primary" id="copyIso">Copy</button>
             </div>
-            <div class="muted" style="font-size: 0.95rem;">Includes a trailing Z to indicate UTC.</div>
           </div>
 
           <div class="result-card">
@@ -311,7 +328,6 @@
             <div class="value-row">
               <div class="mono-box" id="readableOutput">—</div>
             </div>
-            <div class="muted" style="font-size: 0.95rem;" id="precisionNote"></div>
           </div>
 
           <div class="result-card">
@@ -340,17 +356,9 @@
       const statusEl = document.getElementById("status");
       const detectedUnit = document.getElementById("detectedUnit");
       const digitCount = document.getElementById("digitCount");
-      const rangeLabel = document.getElementById("rangeLabel");
       const resultArea = document.getElementById("resultArea");
-      const precisionNote = document.getElementById("precisionNote");
       const toast = document.getElementById("toast");
-
-      const ranges = {
-        seconds: "~1901 to 2038 (10 digits typical)",
-        milliseconds: "~1969 to 5138 (13 digits typical)",
-        microseconds: "Fine-grained microsecond captures",
-        nanoseconds: "Fine-grained nanosecond captures",
-      };
+      const subsecondCheckbox = document.getElementById("subsecondCheckbox");
 
       function inferUnitFromDigits(len) {
         if (len <= 10) return "seconds";
@@ -370,15 +378,15 @@
         return trimmed.length < 3 ? trimmed.padEnd(3, "0") : trimmed;
       }
 
-      function formatExtendedIso(date, fractionalNs) {
+      function formatExtendedIso(date, fractionalNs, includeSubsecond) {
         const year = date.getUTCFullYear();
         const month = pad(date.getUTCMonth() + 1);
         const day = pad(date.getUTCDate());
         const hours = pad(date.getUTCHours());
         const minutes = pad(date.getUTCMinutes());
         const seconds = pad(date.getUTCSeconds());
-        const fraction = normalizeFraction(fractionalNs);
-        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${fraction}Z`;
+        const fraction = includeSubsecond ? normalizeFraction(fractionalNs) : "";
+        return fraction ? `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${fraction}Z` : `${year}-${month}-${day}T${hours}:${minutes}:${seconds}Z`;
       }
 
       function renderStatus(message, isError = false) {
@@ -411,9 +419,10 @@
           renderStatus("Waiting for a timestamp.");
           detectedUnit.textContent = "—";
           digitCount.textContent = "0";
-          rangeLabel.textContent = "Waiting for input";
+          isoOutput.textContent = "—";
+          readableOutput.textContent = "—";
+          detailOutput.textContent = "—";
           copyBtn.disabled = true;
-          precisionNote.textContent = "";
           return;
         }
 
@@ -430,7 +439,6 @@
 
         detectedUnit.textContent = unit;
         digitCount.textContent = digits;
-        rangeLabel.textContent = ranges[unit];
 
         try {
           const asBig = BigInt(cleaned);
@@ -472,7 +480,7 @@
             throw new Error("Could not parse the timestamp.");
           }
 
-          const iso = formatExtendedIso(date, nanoseconds);
+          const iso = formatExtendedIso(date, nanoseconds, subsecondCheckbox.checked);
           const readable = date.toLocaleString(undefined, {
             timeZoneName: "short",
             hour12: false,
@@ -487,10 +495,6 @@
           isoOutput.textContent = iso;
           readableOutput.textContent = readable;
           detailOutput.textContent = detailParts.join(" • ");
-          precisionNote.textContent =
-            unit === "seconds"
-              ? "Whole seconds converted to ISO 8601 in UTC."
-              : "Sub-second precision preserved in the ISO fraction.";
 
           renderStatus("Converted successfully.");
           resultArea.hidden = false;
@@ -539,6 +543,7 @@
           convertTimestamp();
         }
       });
+      subsecondCheckbox.addEventListener("change", convertTimestamp);
 
       const params = new URLSearchParams(window.location.search);
       const preset = params.get("value");
