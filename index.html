@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HTML Tools</title>
+    <title>Tools</title>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap");
       :root {
@@ -115,7 +115,7 @@
         max-width: 1080px;
         margin: 40px auto 0;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
         gap: 24px;
       }
 
@@ -230,7 +230,7 @@
   <body>
     <main>
       <header>
-        <h1>HTML Tools</h1>
+        <h1>Tools</h1>
         <p>
           LLM-generated utilities built with a coding agent. Each tool is a single-file HTML application.
         </p>
@@ -419,7 +419,7 @@
         stats.textContent = "Loading tools...";
         const result = await loadToolsList();
         toolsState.error = result.error;
-        toolsState.items = await Promise.all(result.items.map(loadTool));
+        toolsState.items = result.items;
         render(toolsState.items, { error: toolsState.error });
       }
 
