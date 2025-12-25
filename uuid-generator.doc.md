@@ -1,6 +1,6 @@
 # UUID Generator
 
-Generate random UUIDs (v4) in your browser. No server calls, no tracking.
+Generate random UUIDs (v4).
 
 ## Features
 

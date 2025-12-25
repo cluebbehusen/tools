@@ -1,6 +1,6 @@
 # Password Generator
 
-Generate cryptographically secure random passwords in your browser. No server calls, no tracking.
+Generate cryptographically secure random passwords.
 
 ## Features
 

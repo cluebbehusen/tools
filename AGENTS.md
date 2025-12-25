@@ -35,7 +35,7 @@ Use Space Grotesk for titles (600) and body text, with a calm slate/fog/sand gra
 
 - Accept input via paste, file upload, or URL.
 - Provide a "Copy to clipboard" action for results.
-- Support mobile users (large tap targets, scrollable output areas).
+- Support mobile users with mobile-friendly layouts (large tap targets, scrollable output areas, and content that stays centered on small screens).
 
 ## State and data
 
