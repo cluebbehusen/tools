@@ -1,4 +1,4 @@
-# GIF Downscale Tool
+# GIF Downscaler
 
 Reduce GIF file sizes by downscaling and skipping frames.
 
