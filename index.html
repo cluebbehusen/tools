@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tools</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap");
       :root {
@@ -70,6 +71,24 @@
         font-size: 1.05rem;
         max-width: 640px;
         line-height: 1.6;
+      }
+
+      .title-row {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .byline {
+        font-size: 0.95rem;
+        color: var(--muted);
+        text-decoration: none;
+        margin-left: auto;
+      }
+
+      .byline:hover {
+        color: var(--accent);
       }
 
       .toolbar {
@@ -230,7 +249,10 @@
   <body>
     <main>
       <header>
-        <h1>Tools</h1>
+        <div class="title-row">
+          <h1>Tools</h1>
+          <a class="byline" href="https://luebbehusen.dev">Connor Luebbehusen</a>
+        </div>
         <p>
           LLM-generated utilities built with a coding agent. Each tool is a single-file HTML application.
         </p>
